@@ -14,9 +14,9 @@ vavarb@yahoo.com
 This is a simple Delta Hedge bot. It was developed in python and designed to be executed only on the Deribit Exchange.
   https://www.deribit.com/
 
-<img = 'https://github.com/vavarb/vavabot_delta_hedge/blob/5de2234503e0426252f465d3018df1ad164e3954/img/img1.PNG'>
-<img = 'https://github.com/vavarb/vavabot_delta_hedge/blob/5de2234503e0426252f465d3018df1ad164e3954/img/img2.PNG'>
-<img = 'https://github.com/vavarb/vavabot_delta_hedge/blob/5de2234503e0426252f465d3018df1ad164e3954/img/img3.PNG'>
+<img src = 'https://github.com/vavarb/vavabot_delta_hedge/blob/5de2234503e0426252f465d3018df1ad164e3954/img/img1.PNG'>
+<img src = 'https://github.com/vavarb/vavabot_delta_hedge/blob/5de2234503e0426252f465d3018df1ad164e3954/img/img2.PNG'>
+<img src = 'https://github.com/vavarb/vavabot_delta_hedge/blob/5de2234503e0426252f465d3018df1ad164e3954/img/img3.PNG'>
 
 ## Getting Started
 - This project was devoloped:
