@@ -22,7 +22,7 @@ This is a simple Delta Hedge bot. It was developed in python and designed to be 
 ```
 git clone https://github.com/vavarb/vavabot_delta_hedge.git
 ```
-  2. Run vavabot_hedge.py i
+  2. Run vavabot_hedge.py file
 
 ## Contributing
 - Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
