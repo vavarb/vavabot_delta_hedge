@@ -1,5 +1,5 @@
 
-from vavabot_hedge_beta2_0 import Deribit, client_ID, client_secret
+from vavabot_hedge_beta2_1 import Deribit, client_ID, client_secret
 import time
 from lists import list_monitor_log
 import threading
