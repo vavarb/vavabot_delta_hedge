@@ -1161,8 +1161,10 @@ def run_hedge(ui):
                 pass
             else:
                 if led_color() == 'green':
+                    led1 = led_color()
                     ui.label_29.setPixmap(QtGui.QPixmap(green_icon))
                 elif led_color() == 'red':
+                    led1 = led_color()
                     ui.label_29.setPixmap(QtGui.QPixmap(red_icon))
                 else:
                     pass
