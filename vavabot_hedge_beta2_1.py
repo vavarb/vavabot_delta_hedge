@@ -949,188 +949,200 @@ def run_hedge(ui):
     from lists import list_monitor_log
 
     def ui_signal1(info):
-        object_signal = str(info['object_signal'])
+        try:
+            object_signal = str(info['object_signal'])
 
-        if object_signal == 'textEdit_balance':
-            summary_total = info['info']
+            if object_signal == 'textEdit_balance':
+                summary_total = info['info']
 
-            instrument_position_hedge = info['info2']
-            instrument_position_hedge_size = float(instrument_position_hedge['size'])
-            instrument_position_hedge_size_currency = float(instrument_position_hedge['size_currency'])
+                instrument_position_hedge = info['info2']
+                instrument_position_hedge_size = float(instrument_position_hedge['size'])
+                instrument_position_hedge_size_currency = float(instrument_position_hedge['size_currency'])
 
-            currency = str(info['info3'])
+                currency = str(info['info3'])
 
-            ui.textEdit_balance.clear()
-            ui.textEdit_balance.append('Account: ' +
-                                       str(summary_total['system_name'])
-                                       )
-            ui.textEdit_balance.append(str(summary_total['type']).upper() +
-                                       ': ' +
-                                       str(summary_total['username'])
-                                       )
-            ui.textEdit_balance.append('Currency: ' +
-                                       str(summary_total['currency'])
-                                       )
+                ui.textEdit_balance.clear()
+                ui.textEdit_balance.append('Account: ' +
+                                           str(summary_total['system_name'])
+                                           )
+                ui.textEdit_balance.append(str(summary_total['type']).upper() +
+                                           ': ' +
+                                           str(summary_total['username'])
+                                           )
+                ui.textEdit_balance.append('Currency: ' +
+                                           str(summary_total['currency'])
+                                           )
 
-            portfolio_margining_enabled = summary_total['portfolio_margining_enabled']
-            if portfolio_margining_enabled is True:
-                ui.textEdit_balance.append('Portfolio Margining: ENABLED')
-            elif portfolio_margining_enabled is False:
-                ui.textEdit_balance.append('Portfolio Margining: DISABLED')
+                portfolio_margining_enabled = summary_total['portfolio_margining_enabled']
+                if portfolio_margining_enabled is True:
+                    ui.textEdit_balance.append('Portfolio Margining: ENABLED')
+                elif portfolio_margining_enabled is False:
+                    ui.textEdit_balance.append('Portfolio Margining: DISABLED')
+                else:
+                    pass
+
+                ui.textEdit_balance.append('Balance: ' +
+                                           str(round(summary_total['balance'], 4))
+                                           )
+                ui.textEdit_balance.append('DELTA TOTAL: ' +
+                                           str(round(summary_total['delta_total'], 4))
+                                           )
+                ui.textEdit_balance.append('Projected DELTA TOTAL: ' +
+                                           str(round(summary_total['projected_delta_total'], 4))
+                                           )
+                ui.textEdit_balance.append('Available funds: ' +
+                                           str(round(summary_total['available_funds'], 4))
+                                           )
+                ui.textEdit_balance.append('Equity: ' +
+                                           str(round(summary_total['equity'], 4))
+                                           )
+                ui.textEdit_balance.append('Total PL: ' +
+                                           str(round(summary_total['total_pl'], 4))
+                                           )
+                ui.textEdit_balance.append('Session RPL: ' +
+                                           str(round(summary_total['session_rpl'], 4))
+                                           )
+                ui.textEdit_balance.append('Session UPL: ' +
+                                           str(round(summary_total['session_upl'], 4))
+                                           )
+                ui.textEdit_balance.append('Futures PL: ' +
+                                           str(round(summary_total['futures_pl'], 4))
+                                           )
+                ui.textEdit_balance.append('Futures Session RPL: ' +
+                                           str(round(summary_total['futures_session_rpl'], 4))
+                                           )
+                ui.textEdit_balance.append('Futures Session UPL: ' +
+                                           str(round(summary_total['futures_session_upl'], 4))
+                                           )
+                ui.textEdit_balance.append('Margin Balance: ' +
+                                           str(round(summary_total['margin_balance'], 4))
+                                           )
+                ui.textEdit_balance.append('Initial Margin: ' +
+                                           str(round(summary_total['initial_margin'], 4))
+                                           )
+                ui.textEdit_balance.append('Maintenance Margin: ' +
+                                           str(round(summary_total['maintenance_margin'], 4))
+                                           )
+                ui.textEdit_balance.append('Projected Maintenance Margin: ' +
+                                           str(round(summary_total['projected_maintenance_margin'], 4))
+                                           )
+                ui.textEdit_balance.append('Size: ' +
+                                           str(round(instrument_position_hedge_size, 2)) +
+                                           'USD'
+                                           )
+                ui.textEdit_balance.append('Size Currency: ' +
+                                           str(round(instrument_position_hedge_size_currency, 8)) +
+                                           str(currency)
+                                           )
+
+            elif object_signal == 'textEdit_balance_after':
+                summary_total = info['info']
+                ui.textEdit_balance_after.clear()
+                ui.textEdit_balance_after.append('Account: ' +
+                                                 str(summary_total['system_name'])
+                                                 )
+                ui.textEdit_balance_after.append(str(summary_total['type']).upper() +
+                                                 ': ' +
+                                                 str(summary_total['username'])
+                                                 )
+                ui.textEdit_balance_after.append('Currency: ' +
+                                                 str(summary_total['currency'])
+                                                 )
+                ui.textEdit_balance_after.append('Options PL: ' +
+                                                 str(round(summary_total['options_pl'], 4))
+                                                 )
+                ui.textEdit_balance_after.append('Options Session RPL: ' +
+                                                 str(round(summary_total['options_session_rpl'], 4))
+                                                 )
+                ui.textEdit_balance_after.append('Options Session UPL: ' +
+                                                 str(round(summary_total['options_session_upl'], 4))
+                                                 )
+                ui.textEdit_balance_after.append('Options DELTA: ' +
+                                                 str(round(summary_total['options_delta'], 4))
+                                                 )
+                ui.textEdit_balance_after.append('Options GAMMA: ' +
+                                                 str(round(summary_total['options_gamma'], 4))
+                                                 )
+                ui.textEdit_balance_after.append('Options THETA: ' +
+                                                 str(round(summary_total['options_theta'], 4))
+                                                 )
+                ui.textEdit_balance_after.append('Options VEGA: ' +
+                                                 str(round(summary_total['options_vega'], 4))
+                                                 )
+            elif object_signal == 'Run_Tab':
+                summary_total = info['info']
+
+                ui.lineEdit_24.setText(
+                    str(round(summary_total['delta_total'], 4))
+                )
+
+                ui.lineEdit_26.setText(
+                    str(round(summary_total['options_delta'], 4))
+                )
+
+                ui.lineEdit_25.setText(
+                    str(round(summary_total['options_theta'], 4))
+                )
+
+                ui.lineEdit_27.setText(
+                    str(round(summary_total['options_gamma'], 4))
+                )
+
+                ui.lineEdit_28.setText(
+                    str(round(summary_total['options_vega'], 4))
+                )
+
+                ui.lineEdit_29.setText(
+                    str(summary_total['currency'])
+                )
+
+                ui.lineEdit_31.setText(
+                    str(round(summary_total['balance'], 4))
+                )
+
+                ui.lineEdit_30.setText(
+                    str(round(summary_total['maintenance_margin'], 4))
+                )
+
+                ui.lineEdit_32.setText(
+                    str(round(summary_total['total_pl'], 4))
+                )
+
+                ui.lineEdit_33.setText(
+                    str(round(summary_total['futures_pl'], 4))
+                )
+
+                ui.lineEdit_34.setText(
+                    str(round(summary_total['options_pl'], 4))
+                )
+
+            elif object_signal == 'lineEdit_24_btc_index':
+                b = str(info['info'])
+                ui.lineEdit_24_btc_index.setText(b)
+            elif object_signal == 'lineEdit_58':
+                ui.lineEdit_58.setText(str(info['info']))
+            elif object_signal == 'textEdit_monitor':
+                ui.textEdit_monitor.append(str(info['info']))
+            elif object_signal == 'Hedge_Stopped':
+                # New
+                ui.pushButton_submit_new_credintals.setEnabled(True)
+                ui.radioButton_testnet_true.setEnabled(True)
+                ui.radioButton_2_testnet_false.setEnabled(True)
+                ui.pushButton_submit_new_instruments.setEnabled(True)
+                ui.pushButton_submit_new_instruments_2.setEnabled(True)
+                # old:
+                red_icon = "./red_led_icon.png"
+                ui.label_34.setPixmap(QtGui.QPixmap(red_icon))
+                ui.pushButton_stop_arbitrage.setEnabled(False)
+                ui.pushButton_start_trading.setEnabled(True)
+                thread_btc_index_print()
             else:
                 pass
-
-            ui.textEdit_balance.append('Balance: ' +
-                                       str(round(summary_total['balance'], 4))
-                                       )
-            ui.textEdit_balance.append('DELTA TOTAL: ' +
-                                       str(round(summary_total['delta_total'], 4))
-                                       )
-            ui.textEdit_balance.append('Projected DELTA TOTAL: ' +
-                                       str(round(summary_total['projected_delta_total'], 4))
-                                       )
-            ui.textEdit_balance.append('Available funds: ' +
-                                       str(round(summary_total['available_funds'], 4))
-                                       )
-            ui.textEdit_balance.append('Equity: ' +
-                                       str(round(summary_total['equity'], 4))
-                                       )
-            ui.textEdit_balance.append('Total PL: ' +
-                                       str(round(summary_total['total_pl'], 4))
-                                       )
-            ui.textEdit_balance.append('Session RPL: ' +
-                                       str(round(summary_total['session_rpl'], 4))
-                                       )
-            ui.textEdit_balance.append('Session UPL: ' +
-                                       str(round(summary_total['session_upl'], 4))
-                                       )
-            ui.textEdit_balance.append('Futures PL: ' +
-                                       str(round(summary_total['futures_pl'], 4))
-                                       )
-            ui.textEdit_balance.append('Futures Session RPL: ' +
-                                       str(round(summary_total['futures_session_rpl'], 4))
-                                       )
-            ui.textEdit_balance.append('Futures Session UPL: ' +
-                                       str(round(summary_total['futures_session_upl'], 4))
-                                       )
-            ui.textEdit_balance.append('Margin Balance: ' +
-                                       str(round(summary_total['margin_balance'], 4))
-                                       )
-            ui.textEdit_balance.append('Initial Margin: ' +
-                                       str(round(summary_total['initial_margin'], 4))
-                                       )
-            ui.textEdit_balance.append('Maintenance Margin: ' +
-                                       str(round(summary_total['maintenance_margin'], 4))
-                                       )
-            ui.textEdit_balance.append('Projected Maintenance Margin: ' +
-                                       str(round(summary_total['projected_maintenance_margin'], 4))
-                                       )
-            ui.textEdit_balance.append('Size: ' + str(round(instrument_position_hedge_size, 2)) + 'USD')
-            ui.textEdit_balance.append('Size Currency: ' + str(round(instrument_position_hedge_size_currency, 8)) + str(
-                currency))
-
-        elif object_signal == 'textEdit_balance_after':
-            summary_total = info['info']
-            ui.textEdit_balance_after.clear()
-            ui.textEdit_balance_after.append('Account: ' +
-                                             str(summary_total['system_name'])
-                                             )
-            ui.textEdit_balance_after.append(str(summary_total['type']).upper() +
-                                             ': ' +
-                                             str(summary_total['username'])
-                                             )
-            ui.textEdit_balance_after.append('Currency: ' +
-                                             str(summary_total['currency'])
-                                             )
-            ui.textEdit_balance_after.append('Options PL: ' +
-                                             str(round(summary_total['options_pl'], 4))
-                                             )
-            ui.textEdit_balance_after.append('Options Session RPL: ' +
-                                             str(round(summary_total['options_session_rpl'], 4))
-                                             )
-            ui.textEdit_balance_after.append('Options Session UPL: ' +
-                                             str(round(summary_total['options_session_upl'], 4))
-                                             )
-            ui.textEdit_balance_after.append('Options DELTA: ' +
-                                             str(round(summary_total['options_delta'], 4))
-                                             )
-            ui.textEdit_balance_after.append('Options GAMMA: ' +
-                                             str(round(summary_total['options_gamma'], 4))
-                                             )
-            ui.textEdit_balance_after.append('Options THETA: ' +
-                                             str(round(summary_total['options_theta'], 4))
-                                             )
-            ui.textEdit_balance_after.append('Options VEGA: ' +
-                                             str(round(summary_total['options_vega'], 4))
-                                             )
-        elif object_signal == 'Run_Tab':
-            summary_total = info['info']
-
-            ui.lineEdit_24.setText(
-                str(round(summary_total['delta_total'], 4))
-            )
-
-            ui.lineEdit_26.setText(
-                str(round(summary_total['options_delta'], 4))
-            )
-
-            ui.lineEdit_25.setText(
-                str(round(summary_total['options_theta'], 4))
-            )
-
-            ui.lineEdit_27.setText(
-                str(round(summary_total['options_gamma'], 4))
-            )
-
-            ui.lineEdit_28.setText(
-                str(round(summary_total['options_vega'], 4))
-            )
-
-            ui.lineEdit_29.setText(
-                str(summary_total['currency'])
-            )
-
-            ui.lineEdit_31.setText(
-                str(round(summary_total['balance'], 4))
-            )
-
-            ui.lineEdit_30.setText(
-                str(round(summary_total['maintenance_margin'], 4))
-            )
-
-            ui.lineEdit_32.setText(
-                str(round(summary_total['total_pl'], 4))
-            )
-
-            ui.lineEdit_33.setText(
-                str(round(summary_total['futures_pl'], 4))
-            )
-
-            ui.lineEdit_34.setText(
-                str(round(summary_total['options_pl'], 4))
-            )
-
-        elif object_signal == 'lineEdit_24_btc_index':
-            b = str(info['info'])
-            ui.lineEdit_24_btc_index.setText(b)
-        elif object_signal == 'lineEdit_58':
-            ui.lineEdit_58.setText(str(info['info']))
-        elif object_signal == 'textEdit_monitor':
-            ui.textEdit_monitor.append(str(info['info']))
-        elif object_signal == 'Hedge_Stopped':
-            # New
-            ui.pushButton_submit_new_credintals.setEnabled(True)
-            ui.radioButton_testnet_true.setEnabled(True)
-            ui.radioButton_2_testnet_false.setEnabled(True)
-            ui.pushButton_submit_new_instruments.setEnabled(True)
-            ui.pushButton_submit_new_instruments_2.setEnabled(True)
-            # old:
-            red_icon = "./red_led_icon.png"
-            ui.label_34.setPixmap(QtGui.QPixmap(red_icon))
-            ui.pushButton_stop_arbitrage.setEnabled(False)
-            ui.pushButton_start_trading.setEnabled(True)
-            thread_btc_index_print()
-        else:
+        except Exception as er:
+            from lists import list_monitor_log
+            list_monitor_log.append('***** ERROR - ui_signal1 error code 1137. ' + str(er))
+            time.sleep(5)
+        finally:
             pass
 
     def ui_signal2(info):
