@@ -1118,6 +1118,13 @@ def run_hedge(ui):
         elif object_signal == 'textEdit_monitor':
             ui.textEdit_monitor.append(str(info['info']))
         elif object_signal == 'Hedge_Stopped':
+            # New
+            ui.pushButton_submit_new_credintals.setEnabled(True)
+            ui.radioButton_testnet_true.setEnabled(True)
+            ui.radioButton_2_testnet_false.setEnabled(True)
+            ui.pushButton_submit_new_instruments.setEnabled(True)
+            ui.pushButton_submit_new_instruments_2.setEnabled(True)
+            # old:
             red_icon = "./red_led_icon.png"
             ui.label_34.setPixmap(QtGui.QPixmap(red_icon))
             ui.pushButton_stop_arbitrage.setEnabled(False)
@@ -1452,7 +1459,7 @@ def run_hedge(ui):
                 'object_signal': 'Hedge_Stopped', 'info': ''})
             pass
         else:
-            list_monitor_log.append('********** ERROR while running hedge - line 1261 **********')
+            list_monitor_log.append('********** ERROR while running hedge - line 1455 **********')
             pass
 
     sinal.ui_signal1.connect(ui_signal1)
