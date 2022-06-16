@@ -169,11 +169,10 @@ class Deribit:
                 instrument_name = str(msg['params']['instrument_name'])
                 instrument_direction = str(msg['method']) + ' ' + str(msg['params']['type'])
                 order_amount_instrument = str(msg['params']['amount'])
-                instrument_price = str(msg['params']['price'])
                 self.logwriter(str(instrument_name) +
                                ': ' + str(instrument_direction) +
                                ' ' + str(order_amount_instrument) +
-                               ' at ' + str(instrument_price) +
+                               ' at MARKET' +
                                ' ID: ' + str(msg['id']))
 
             else:
