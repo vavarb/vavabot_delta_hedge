@@ -1353,7 +1353,7 @@ def run_hedge(ui):
             except Exception as error1:
                 from connection_hedge import connect
                 connect.logwriter('********** ERROR: BTC index print while started hedge **********'
-                                        + str(error1))
+                                  + str(error1))
                 list_monitor_log.append('********** ERROR: BTC index print while started hedge **********'
                                         + str(error1))
                 pass
