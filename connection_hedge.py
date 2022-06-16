@@ -1,5 +1,5 @@
 
-from vavabot_hedge_beta2_1 import Deribit, CredentialsSaved
+from vavabot_hedge_beta2_2 import Deribit, CredentialsSaved
 import time
 from lists import list_monitor_log
 import threading
