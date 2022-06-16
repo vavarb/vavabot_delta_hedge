@@ -1,21 +1,12 @@
 
-from vavabot_hedge_beta2_1 import Deribit, client_ID, client_secret
+from vavabot_hedge_beta2_1 import Deribit, CredentialsSaved
 import time
 from lists import list_monitor_log
 import threading
-global connect
 
-
-with open('testnet_true_or_false_hedge.txt', 'r') as testnet_saved_tru_or_false1_file:
-    testnet_saved_tru_or_false1_file_read = str(testnet_saved_tru_or_false1_file.read())
-    testnet_saved_tru_or_false1 = testnet_saved_tru_or_false1_file_read
-
-if 'False' in testnet_saved_tru_or_false1:
-    test = False
-else:
-    test = True
-
-connect = Deribit(test=test, only_public=False, client_ID=client_ID, client_secret=client_secret)
+connect = Deribit(client_id=CredentialsSaved.api_secret_saved(),
+                  client_secret=CredentialsSaved.secret_key_saved(),
+                  wss_url=CredentialsSaved.url())
 
 led = 'red'
 
@@ -29,23 +20,53 @@ def led_color():
 def connection():
     global connect
     global led
+
     while True:
         try:
+            global connect
             connect_set_heartbeat = connect.set_heartbeat()
             if connect_set_heartbeat == 'ok':
                 list_monitor_log.append('connection ok')
                 led = 'green'
                 time.sleep(2)
                 pass
+            elif connect_set_heartbeat == 'too_many_requests':
+                list_monitor_log.append(str('***************** ERROR too_many_requests ******************'))
+                connect.logwriter(str('***************** ERROR too_many_requests ******************'))
+                connect.cancel_all()
+                time.sleep(10)
+                connect.cancel_all()
             else:
                 list_monitor_log.append('********** Offline - Connection ERROR **********')
+                connect.logwriter(str('********** OffLine - Connection ERROR **********'))
                 led = 'red'
-                time.sleep(10)
-                connect = Deribit(test=test, only_public=False, client_ID=client_ID, client_secret=client_secret)
+                time.sleep(2)
+                connect = Deribit(client_id=CredentialsSaved.api_secret_saved(),
+                                  client_secret=CredentialsSaved.secret_key_saved(),
+                                  wss_url=CredentialsSaved.url())
+                connect_set_heartbeat2 = connect.set_heartbeat()
+                if connect_set_heartbeat2 == 'ok':
+                    list_monitor_log.append(str('***************** Reeturn Connection ******************'))
+                    connect.logwriter(str('***************** Reeturn Connection ******************'))
+                    connect.cancel_all()
+                    time.sleep(2)
+                elif connect_set_heartbeat2 == 'too_many_requests':
+                    list_monitor_log.append(str('***************** ERROR too_many_requests ******************'))
+                    connect.logwriter(str('***************** ERROR too_many_requests ******************'))
+                    connect.cancel_all()
+                    time.sleep(10)
+                    connect.cancel_all()
+                    pass
+                else:
+                    pass
+
         except Exception as e:
             led = 'red'
             time.sleep(10)
             list_monitor_log.append('********** Thread_connection - Connection ERROR ********** ' + str(e))
+            connect.logwriter('********** Thread_connection - Connection ERROR ********** ' + str(e))
+            pass
+        finally:
             pass
 
 

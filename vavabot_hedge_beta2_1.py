@@ -12,6 +12,7 @@ global list_monitor_log
 global greeks_value_dict
 global hedge_on_off
 global connect
+global counter_send_order
 
 
 # Classe de Sinais.
@@ -27,31 +28,6 @@ class Sinais(QtCore.QObject):
 
 
 sinal = Sinais()  # Instância da Classe Sinais.
-
-with open('api-key_hedge.txt', 'r') as api_secret_saved_file1:
-    api_secret_saved_file_read1 = str(api_secret_saved_file1.read())
-
-with open('secret-key_hedge.txt', 'r') as secret_key_saved_file1:
-    secret_key_saved_file_read1 = str(secret_key_saved_file1.read())
-
-client_ID = api_secret_saved_file_read1
-client_secret = secret_key_saved_file_read1
-
-clientId = client_ID
-clientSecret = client_secret
-
-with open('testnet_true_or_false_hedge.txt', 'r') as testnet_saved_tru_or_false1_file:
-    testnet_saved_tru_or_false1_file_read = str(testnet_saved_tru_or_false1_file.read())
-    testnet_saved_tru_or_false1 = testnet_saved_tru_or_false1_file_read
-
-if 'False' in testnet_saved_tru_or_false1:
-    testnet_true_or_false = False
-    user_client_url = 'wss://deribit.com/ws/api/v2'
-else:
-    testnet_true_or_false = True
-    user_client_url = 'wss://test.deribit.com/ws/api/v2'
-
-WSS_url = user_client_url
 
 
 class CredentialsSaved:
@@ -102,115 +78,129 @@ class CredentialsSaved:
 
 
 class Deribit:
-    def __init__(self, test=None, only_public=False, client_ID=False, client_secret=False):
-        if test is True:
-            if client_ID or client_secret: only_public = False
-            if only_public:
-                self.logwriter(msg='WARNING! Only public methods available!')
-                return
-            self._auth(client_ID, client_secret, WSS_url)
-        else:
-            pass
-        if test is False:
-            if client_ID or client_secret: only_public = False
-            if only_public:
-                self.logwriter(msg='WARNING! Only public methods available!')
-                return
-            self.WSS_url = 'wss://www.test.deribit.com/ws/api/v2' if test else 'wss://www.deribit.com/ws/api/v2'
-            self._auth(client_ID, client_secret, self.WSS_url)
-        else:
-            pass
+    def __init__(self, client_id=None, client_secret=None, wss_url=None):
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.wss_url = wss_url
 
+        self._auth(client_id=client_id, wss_url=wss_url, client_secret=client_secret)
+
+    # noinspection PyMethodMayBeStatic
     def logwriter(self, msg):
         from lists import list_monitor_log
-        out = datetime.now().strftime("\n[%Y%m%d,%H:%M:%S] ") + str(msg)
-        list_monitor_log.append(str(out))
+        global counter_send_order
+
+        filename = 'log_hedge.log'
+        counter_send_order = counter_send_order + 1
+
         try:
-            with open('log_hedge.log', 'a') as log_file:
-                log_file.write(out)
+            out = datetime.now().strftime("\n[%Y/%m/%d, %H:%M:%S] ") + str(msg)
+            list_monitor_log.append(str(msg) + '_' + str(counter_send_order))
+            with open(filename, 'a') as logwriter_file:
+                logwriter_file.write(str(out) + '_' + str(counter_send_order))
+
         except Exception as er:
-            log_file.write(str(er))
-            log_file.close()
-            pass
+            from connection_hedge import connect
+            from lists import list_monitor_log
+            with open(filename, 'a') as logwriter_file:
+                logwriter_file.write(str(datetime.now().strftime("\n[%Y/%m/%d, %H:%M:%S] ")) +
+                                     '***** ERROR except in logwriter: ' +
+                                     str(er) + str(msg) +
+                                     '_' + str(counter_send_order) + ' *****')
+            list_monitor_log.append('***** ERROR except in logwriter: ' + str(er) + ' *****')
         finally:
-            log_file.close()
             pass
 
-    def _auth(self, client_ID, client_secret, WSS_url):
+    def _auth(self, client_id=None, wss_url=None, client_secret=None):
+        self.client_id = client_id
+        self.wss_url = wss_url
+        self.client_secret = client_secret
+
         from lists import list_monitor_log
+        global counter_send_order
+
+        counter_send_order = 0
 
         timestamp = round(datetime.now().timestamp() * 1000)
         nonce = "abcd"
         data = ""
         signature = hmac.new(
-            bytes(clientSecret, "latin-1"),
+            bytes(client_secret, "latin-1"),
             msg=bytes('{}\n{}\n{}'.format(timestamp, nonce, data), "latin-1"),
             digestmod=hashlib.sha256
         ).hexdigest().lower()
 
-        if testnet_true_or_false is True:
-            try:
-                self._WSS = create_connection(WSS_url)
-                msg = {
-                    "jsonrpc": "2.0",
-                    "id": 1,
-                    "method": "public/auth",
-                    "params": {
-                        "grant_type": "client_signature",
-                        "client_id": clientId,
-                        "timestamp": timestamp,
-                        "signature": signature,
-                        "nonce": nonce,
-                        "data": data
-                    }
+        try:
+            self._WSS = create_connection(wss_url)
+            msg = {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "public/auth",
+                "params": {
+                    "grant_type": "client_signature",
+                    "client_id": client_id,
+                    "timestamp": timestamp,
+                    "signature": signature,
+                    "nonce": nonce,
+                    "data": data
                 }
-                self.logwriter('Auth OK\n############')
-                list_monitor_log.append('Auth OK\n############')
-                list_monitor_log.append('identified')
-                # print('identified')
-                return self._sender(msg)
-            except Exception as er:
-                self.logwriter('auth error:' + str(er))
-        else:
-            pass
-        if testnet_true_or_false is False:
-            try:
-                self._WSS = create_connection(WSS_url)
-                msg = {
-                    "jsonrpc": "2.0",
-                    "id": 1,
-                    "method": "public/auth",
-                    "params": {
-                        "grant_type": "client_signature",
-                        "client_id": clientId,
-                        "timestamp": timestamp,
-                        "signature": signature,
-                        "nonce": nonce,
-                        "data": data
-                    }
-                }
-                self.logwriter('Auth OK\n############')
-                list_monitor_log.append('Auth OK\n############')
-                list_monitor_log.append('identified')
-                # print('identified')
-                return self._sender(msg)
-            except Exception as er:
-                self.logwriter('auth error:' + str(er))
-        else:
-            pass
+            }
+            self.logwriter('Auth OK\n############')
+            list_monitor_log.append('Auth OK\n############')
+            list_monitor_log.append('identified')
+            return self._sender(msg)
+        except Exception as er:
+            from lists import list_monitor_log
+            list_monitor_log.append('***** auth ERROR:' + ' error: ' + str(er) + ' *****')
+            self.logwriter('***** auth ERROR:' + ' error: ' + str(er) + ' *****')
 
     def _sender(self, msg):
         from lists import list_monitor_log
+
         try:
-            self.logwriter(msg['method'])
+            if str(msg['method']) == 'public/set_heartbeat':
+                self.logwriter(str(msg['method']) + '(* Connection Test *)' + ' ID: ' + str(msg['id']))
+
+            elif str(msg['method']) == "private/buy" or str(msg['method']) == "private/sell":
+                instrument_name = str(msg['params']['instrument_name'])
+                instrument_direction = str(msg['method']) + ' ' + str(msg['params']['type'])
+                order_amount_instrument = str(msg['params']['amount'])
+                instrument_price = str(msg['params']['price'])
+                self.logwriter(str(instrument_name) +
+                               ': ' + str(instrument_direction) +
+                               ' ' + str(order_amount_instrument) +
+                               ' at ' + str(instrument_price) +
+                               ' ID: ' + str(msg['id']))
+
+            else:
+                self.logwriter(str(msg['method']) + ' ID: ' + str(msg['id']))
+
             self._WSS.send(json.dumps(msg))
             out = json.loads(self._WSS.recv())
-            # logwriter(msg=out['result'])
-            # print(out)
-            return out['result']
+
+            if 'error' in str(out):
+                self.logwriter(str(out) + ' ID: ' + str(msg['id']))
+                list_monitor_log.append(str(out) + ' ID: ' + str(msg['id']))
+                return out['error']
+            elif str(msg['method']) == 'public/set_heartbeat':
+                if 'too_many_requests' in str(out) or '10028' in str(out) or 'too_many_requests' in str(
+                        out['result']) or '10028' in str(out['result']):
+                    list_monitor_log.append(str('***************** ERROR too_many_requests ******************' + str(
+                        out) + str(msg['id'])))
+                    self.logwriter(str('**************** ERROR too_many_requests *****************' + str(
+                        out) + str(msg['id'])))
+                    time.sleep(10)
+                    return 'too_many_requests'
+                else:
+                    return out['result']
+            else:
+                return out['result']
+
         except Exception as er:
-            self.logwriter('_sender error: ' + str(er))
-            list_monitor_log.append('_sender error: ' + str(er))
+            self.logwriter('_sender error: ' + str(er) + ' ID: ' + str(msg['id']))
+            list_monitor_log.append('_sender error: ' + str(er) + ' ID: ' + str(msg['id']))
+        finally:
+            pass
 
     def get_instruments(self, currency):
         msg = \
