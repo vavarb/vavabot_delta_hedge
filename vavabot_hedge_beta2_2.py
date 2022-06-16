@@ -53,12 +53,11 @@ class CredentialsSaved:
     @staticmethod
     def testnet_saved_tru_or_false():
         from lists import list_monitor_log
-        from connection_hedge import connect
+
         with open('testnet_true_or_false_hedge.txt', 'r') as testnet_saved_tru_or_false_file:
             testnet_saved_tru_or_false_file_read = str(testnet_saved_tru_or_false_file.read())
         if testnet_saved_tru_or_false_file_read == 'True':
             list_monitor_log.append('*** TEST Account ***')
-            connect.logwriter('*** TEST Account ***')
             return True
         elif testnet_saved_tru_or_false_file_read == 'False':
             list_monitor_log.append('*** REAL Account ***')
@@ -71,7 +70,6 @@ class CredentialsSaved:
     @staticmethod
     def url():
         from lists import list_monitor_log
-        from connection_hedge import connect
 
         if CredentialsSaved.testnet_saved_tru_or_false() is True:
             list_monitor_log.append('*** URL: ' + 'wss://test.deribit.com/ws/api/v2' + ' ***')
@@ -81,7 +79,6 @@ class CredentialsSaved:
             return 'wss://deribit.com/ws/api/v2'
         else:
             list_monitor_log.append('***** URL ERROR in testnet True or False *****')
-            connect.logwriter('***** URL ERROR in testnet True or False *****')
 
 
 class Deribit:

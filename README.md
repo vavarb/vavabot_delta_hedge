@@ -23,7 +23,12 @@ This is a simple Delta Hedge bot. It was developed in python and designed to be 
   - OS: Windows 10.
   - IDE: PyCharm 2021.3.1 (Community Edition).
   - Language: Python 3.10
-- To get a local copy up and running follow.
+- If you want .exe version, you can download it from the link below. If you prefer to obtain a local copy of the 
+repository, please do the following further below.
+```
+https://drive.google.com/file/d/1mg8J64k_EsfIUF2h-d6k_Fonx1vaxdP9/view?usp=sharing
+```
+Windows FireWall need disabled for .exe if there is a Deribit conection or SSL Certificate error.
 
 ### Prerequisites
 - Install packages:
