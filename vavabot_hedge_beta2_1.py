@@ -12,6 +12,7 @@ global list_monitor_log
 global greeks_value_dict
 global hedge_on_off
 global connect
+global counter_send_order
 
 
 # Classe de Sinais.
@@ -27,31 +28,6 @@ class Sinais(QtCore.QObject):
 
 
 sinal = Sinais()  # Instância da Classe Sinais.
-
-with open('api-key_hedge.txt', 'r') as api_secret_saved_file1:
-    api_secret_saved_file_read1 = str(api_secret_saved_file1.read())
-
-with open('secret-key_hedge.txt', 'r') as secret_key_saved_file1:
-    secret_key_saved_file_read1 = str(secret_key_saved_file1.read())
-
-client_ID = api_secret_saved_file_read1
-client_secret = secret_key_saved_file_read1
-
-clientId = client_ID
-clientSecret = client_secret
-
-with open('testnet_true_or_false_hedge.txt', 'r') as testnet_saved_tru_or_false1_file:
-    testnet_saved_tru_or_false1_file_read = str(testnet_saved_tru_or_false1_file.read())
-    testnet_saved_tru_or_false1 = testnet_saved_tru_or_false1_file_read
-
-if 'False' in testnet_saved_tru_or_false1:
-    testnet_true_or_false = False
-    user_client_url = 'wss://deribit.com/ws/api/v2'
-else:
-    testnet_true_or_false = True
-    user_client_url = 'wss://test.deribit.com/ws/api/v2'
-
-WSS_url = user_client_url
 
 
 class CredentialsSaved:
@@ -77,20 +53,26 @@ class CredentialsSaved:
     @staticmethod
     def testnet_saved_tru_or_false():
         from lists import list_monitor_log
+        from connection_hedge import connect
         with open('testnet_true_or_false_hedge.txt', 'r') as testnet_saved_tru_or_false_file:
             testnet_saved_tru_or_false_file_read = str(testnet_saved_tru_or_false_file.read())
         if testnet_saved_tru_or_false_file_read == 'True':
             list_monitor_log.append('*** TEST Account ***')
+            connect.logwriter('*** TEST Account ***')
             return True
         elif testnet_saved_tru_or_false_file_read == 'False':
             list_monitor_log.append('*** REAL Account ***')
+            connect.logwriter('*** REAL Account ***')
             return False
         else:
             list_monitor_log.append('***** ERROR in testnet_saved_tru_or_false *****')
+            connect.logwriter('***** ERROR in testnet_saved_tru_or_false *****')
 
     @staticmethod
     def url():
         from lists import list_monitor_log
+        from connection_hedge import connect
+
         if CredentialsSaved.testnet_saved_tru_or_false() is True:
             list_monitor_log.append('*** URL: ' + 'wss://test.deribit.com/ws/api/v2' + ' ***')
             return 'wss://test.deribit.com/ws/api/v2'
@@ -99,118 +81,133 @@ class CredentialsSaved:
             return 'wss://deribit.com/ws/api/v2'
         else:
             list_monitor_log.append('***** URL ERROR in testnet True or False *****')
+            connect.logwriter('***** URL ERROR in testnet True or False *****')
 
 
 class Deribit:
-    def __init__(self, test=None, only_public=False, client_ID=False, client_secret=False):
-        if test is True:
-            if client_ID or client_secret: only_public = False
-            if only_public:
-                self.logwriter(msg='WARNING! Only public methods available!')
-                return
-            self._auth(client_ID, client_secret, WSS_url)
-        else:
-            pass
-        if test is False:
-            if client_ID or client_secret: only_public = False
-            if only_public:
-                self.logwriter(msg='WARNING! Only public methods available!')
-                return
-            self.WSS_url = 'wss://www.test.deribit.com/ws/api/v2' if test else 'wss://www.deribit.com/ws/api/v2'
-            self._auth(client_ID, client_secret, self.WSS_url)
-        else:
-            pass
+    def __init__(self, client_id=None, client_secret=None, wss_url=None):
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.wss_url = wss_url
 
+        self._auth(client_id=client_id, wss_url=wss_url, client_secret=client_secret)
+
+    # noinspection PyMethodMayBeStatic
     def logwriter(self, msg):
         from lists import list_monitor_log
-        out = datetime.now().strftime("\n[%Y%m%d,%H:%M:%S] ") + str(msg)
-        list_monitor_log.append(str(out))
+        global counter_send_order
+
+        filename = 'log_hedge.log'
+        counter_send_order = counter_send_order + 1
+
         try:
-            with open('log_hedge.log', 'a') as log_file:
-                log_file.write(out)
+            out = datetime.now().strftime("\n[%Y/%m/%d, %H:%M:%S] ") + str(msg)
+            list_monitor_log.append(str(msg) + '_' + str(counter_send_order))
+            with open(filename, 'a') as logwriter_file:
+                logwriter_file.write(str(out) + '_' + str(counter_send_order))
+
         except Exception as er:
-            log_file.write(str(er))
-            log_file.close()
-            pass
+            from connection_hedge import connect
+            from lists import list_monitor_log
+            with open(filename, 'a') as logwriter_file:
+                logwriter_file.write(str(datetime.now().strftime("\n[%Y/%m/%d, %H:%M:%S] ")) +
+                                     '***** ERROR except in logwriter: ' +
+                                     str(er) + str(msg) +
+                                     '_' + str(counter_send_order) + ' *****')
+            list_monitor_log.append('***** ERROR except in logwriter: ' + str(er) + ' *****')
         finally:
-            log_file.close()
             pass
 
-    def _auth(self, client_ID, client_secret, WSS_url):
+    def _auth(self, client_id=None, wss_url=None, client_secret=None):
+        self.client_id = client_id
+        self.wss_url = wss_url
+        self.client_secret = client_secret
+
         from lists import list_monitor_log
+        global counter_send_order
+
+        counter_send_order = 0
 
         timestamp = round(datetime.now().timestamp() * 1000)
         nonce = "abcd"
         data = ""
         signature = hmac.new(
-            bytes(clientSecret, "latin-1"),
+            bytes(client_secret, "latin-1"),
             msg=bytes('{}\n{}\n{}'.format(timestamp, nonce, data), "latin-1"),
             digestmod=hashlib.sha256
         ).hexdigest().lower()
 
-        if testnet_true_or_false is True:
-            try:
-                self._WSS = create_connection(WSS_url)
-                msg = {
-                    "jsonrpc": "2.0",
-                    "id": 1,
-                    "method": "public/auth",
-                    "params": {
-                        "grant_type": "client_signature",
-                        "client_id": clientId,
-                        "timestamp": timestamp,
-                        "signature": signature,
-                        "nonce": nonce,
-                        "data": data
-                    }
+        try:
+            self._WSS = create_connection(wss_url)
+            msg = {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "public/auth",
+                "params": {
+                    "grant_type": "client_signature",
+                    "client_id": client_id,
+                    "timestamp": timestamp,
+                    "signature": signature,
+                    "nonce": nonce,
+                    "data": data
                 }
-                self.logwriter('Auth OK\n############')
-                list_monitor_log.append('Auth OK\n############')
-                list_monitor_log.append('identified')
-                # print('identified')
-                return self._sender(msg)
-            except Exception as er:
-                self.logwriter('auth error:' + str(er))
-        else:
-            pass
-        if testnet_true_or_false is False:
-            try:
-                self._WSS = create_connection(WSS_url)
-                msg = {
-                    "jsonrpc": "2.0",
-                    "id": 1,
-                    "method": "public/auth",
-                    "params": {
-                        "grant_type": "client_signature",
-                        "client_id": clientId,
-                        "timestamp": timestamp,
-                        "signature": signature,
-                        "nonce": nonce,
-                        "data": data
-                    }
-                }
-                self.logwriter('Auth OK\n############')
-                list_monitor_log.append('Auth OK\n############')
-                list_monitor_log.append('identified')
-                # print('identified')
-                return self._sender(msg)
-            except Exception as er:
-                self.logwriter('auth error:' + str(er))
-        else:
-            pass
+            }
+            self.logwriter('Auth OK\n############')
+            list_monitor_log.append('Auth OK\n############')
+            list_monitor_log.append('identified')
+            return self._sender(msg)
+        except Exception as er:
+            from lists import list_monitor_log
+            list_monitor_log.append('***** auth ERROR:' + ' error: ' + str(er) + ' *****')
+            self.logwriter('***** auth ERROR:' + ' error: ' + str(er) + ' *****')
 
     def _sender(self, msg):
         from lists import list_monitor_log
+
         try:
-            self.logwriter(msg['method'])
+            if str(msg['method']) == 'public/set_heartbeat':
+                self.logwriter(str(msg['method']) + '(* Connection Test *)' + ' ID: ' + str(msg['id']))
+
+            elif str(msg['method']) == "private/buy" or str(msg['method']) == "private/sell":
+                instrument_name = str(msg['params']['instrument_name'])
+                instrument_direction = str(msg['method']) + ' ' + str(msg['params']['type'])
+                order_amount_instrument = str(msg['params']['amount'])
+                instrument_price = str(msg['params']['price'])
+                self.logwriter(str(instrument_name) +
+                               ': ' + str(instrument_direction) +
+                               ' ' + str(order_amount_instrument) +
+                               ' at ' + str(instrument_price) +
+                               ' ID: ' + str(msg['id']))
+
+            else:
+                self.logwriter(str(msg['method']) + ' ID: ' + str(msg['id']))
+
             self._WSS.send(json.dumps(msg))
             out = json.loads(self._WSS.recv())
-            # logwriter(msg=out['result'])
-            # print(out)
-            return out['result']
+
+            if 'error' in str(out):
+                self.logwriter(str(out) + ' ID: ' + str(msg['id']))
+                list_monitor_log.append(str(out) + ' ID: ' + str(msg['id']))
+                return out['error']
+            elif str(msg['method']) == 'public/set_heartbeat':
+                if 'too_many_requests' in str(out) or '10028' in str(out) or 'too_many_requests' in str(
+                        out['result']) or '10028' in str(out['result']):
+                    list_monitor_log.append(str('***************** ERROR too_many_requests ******************' + str(
+                        out) + str(msg['id'])))
+                    self.logwriter(str('**************** ERROR too_many_requests *****************' + str(
+                        out) + str(msg['id'])))
+                    time.sleep(10)
+                    return 'too_many_requests'
+                else:
+                    return out['result']
+            else:
+                return out['result']
+
         except Exception as er:
-            self.logwriter('_sender error: ' + str(er))
-            list_monitor_log.append('_sender error: ' + str(er))
+            self.logwriter('_sender error: ' + str(er) + ' ID: ' + str(msg['id']))
+            list_monitor_log.append('_sender error: ' + str(er) + ' ID: ' + str(msg['id']))
+        finally:
+            pass
 
     def get_instruments(self, currency):
         msg = \
@@ -538,6 +535,7 @@ class ConfigAndInstrumentsSaved:
             return float(inferior_limit)
 
 
+# noinspection PyShadowingNames
 def credentials(ui):
     def message_box_reboot():
         import sys
@@ -721,7 +719,54 @@ def credentials(ui):
     ui.radioButton_2_testnet_false.clicked.connect(message_box_reboot3)
 
 
+# noinspection PyShadowingNames
 def config(ui):
+    def set_version_and_icon():
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "VavaBot - Delta Hedge 2.2"))
+
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(".../icon_noctuline_wall_e_eve_hedge.ico"),
+                       QtGui.QIcon.Normal, QtGui.QIcon.Off)
+
+    def set_date():
+        date_now_instrument = QtCore.QDate.currentDate()
+        ui.lineEdit_maturity_instrumet1.setDate(date_now_instrument.addDays(-1))
+
+    def remove_log_hedge_log_if_bigger_500kb_when_open_app():
+        import os
+        from lists import list_monitor_log
+
+        try:
+            if os.path.isfile('log_hedge_backup.log') is True:
+                if float(os.path.getsize('log_hedge_backup.log')) > 8000000:
+                    os.unlink('log_hedge_backup.log')
+                    list_monitor_log.append('*** Deleted log_hedge_backup.log (>8MB). ***')
+                else:
+                    list_monitor_log.append('*** Len log_hedge_backup.log < 8MB. ***')
+            else:
+                pass
+
+            if os.path.isfile('log_hedge.log') is True:
+                if float(os.path.getsize('log_hedge.log')) > 500000:
+                    with open('log_hedge_backup.log', 'a') as file_backup:
+                        with open('log_hedge.log', 'r') as log_file:
+                            file_backup.writelines(log_file)
+                            list_monitor_log.append('*** Appended log_hedge.log into log_hedge_backup.log ***')
+                    os.unlink('log_hedge.log')
+                    list_monitor_log.append('*** Deleted and Created log_hedge.log ***')
+                else:
+                    list_monitor_log.append('*** Len log_hedge.log < 0.5MB. ***')
+            else:
+                list_monitor_log.append('*** Created log_hedge.log ***')
+
+        except Exception as er:
+            from connection_hedge import connect
+            list_monitor_log.append('***** ERROR in remove_log_hedge_log_if_bigger_500kb_when_open_app(): ' +
+                                    str(er) + '. Error Code 758 *****')
+            connect.logwriter('***** ERROR in remove_llog_hedge_log_if_bigger_500kb_when_open_app(): ' +
+                              str(er) + '. Error Code 760 *****')
+
     def textedit_instruments_saved_signal(info):
         ui.textEdit_instruments_saved.setText(str(info))
 
@@ -797,7 +842,10 @@ def config(ui):
     def instruments_save():
         from lists import list_monitor_log
         try:
-            if ui.lineEdit_currency_instrumet1.currentText() == 'Set BTC or ETH:':
+            date_now_instrument = QtCore.QDate.currentDate()
+            if ui.lineEdit_currency_instrumet1.currentText() == 'Set BTC or ETH:' or \
+                (ui.lineEdit_maturity_instrumet1.date() == date_now_instrument.addDays(-1) and
+                    ui.checkBox_perpetual_1.checkState() == 0):
                 msg = QtWidgets.QMessageBox()
                 msg.setIcon(QtWidgets.QMessageBox.Information)
                 msg.setText('All fields are required - ERROR')
@@ -868,6 +916,9 @@ def config(ui):
             list_monitor_log.append(str(er))
             config_save_file.close()
 
+    set_version_and_icon()
+    remove_log_hedge_log_if_bigger_500kb_when_open_app()
+    set_date()
     sinal.textedit_instruments_saved_signal.connect(textedit_instruments_saved_signal)
     sinal.ui_signal3.connect(ui_signal3)
     instruments_saved_print_and_check_available()
@@ -876,6 +927,7 @@ def config(ui):
     ui.pushButton_submit_new_instruments_2.clicked.connect(config_save)
 
 
+# noinspection PyShadowingNames
 def summary(ui):
     def message_box_instrument_syntax_error():
         msg = QtWidgets.QMessageBox()
@@ -945,185 +997,231 @@ def summary(ui):
     options_account_print()  # tem signal na função
 
 
+# noinspection PyShadowingNames
 def run_hedge(ui):
     from lists import list_monitor_log
 
     def ui_signal1(info):
-        object_signal = str(info['object_signal'])
+        try:
+            object_signal = str(info['object_signal'])
 
-        if object_signal == 'textEdit_balance':
-            summary_total = info['info']
+            if object_signal == 'textEdit_balance':
+                summary_total = info['info']
 
-            instrument_position_hedge = info['info2']
-            instrument_position_hedge_size = float(instrument_position_hedge['size'])
-            instrument_position_hedge_size_currency = float(instrument_position_hedge['size_currency'])
+                instrument_position_hedge = info['info2']
+                instrument_position_hedge_size = float(instrument_position_hedge['size'])
+                instrument_position_hedge_size_currency = float(instrument_position_hedge['size_currency'])
 
-            currency = str(info['info3'])
+                currency = str(info['info3'])
 
-            ui.textEdit_balance.clear()
-            ui.textEdit_balance.append('Account: ' +
-                                       str(summary_total['system_name'])
-                                       )
-            ui.textEdit_balance.append(str(summary_total['type']).upper() +
-                                       ': ' +
-                                       str(summary_total['username'])
-                                       )
-            ui.textEdit_balance.append('Currency: ' +
-                                       str(summary_total['currency'])
-                                       )
+                ui.textEdit_balance.clear()
+                ui.textEdit_balance.append('Account: ' +
+                                           str(summary_total['system_name'])
+                                           )
+                ui.textEdit_balance.append(str(summary_total['type']).upper() +
+                                           ': ' +
+                                           str(summary_total['username'])
+                                           )
+                ui.textEdit_balance.append('Currency: ' +
+                                           str(summary_total['currency'])
+                                           )
 
-            portfolio_margining_enabled = summary_total['portfolio_margining_enabled']
-            if portfolio_margining_enabled is True:
-                ui.textEdit_balance.append('Portfolio Margining: ENABLED')
-            elif portfolio_margining_enabled is False:
-                ui.textEdit_balance.append('Portfolio Margining: DISABLED')
+                portfolio_margining_enabled = summary_total['portfolio_margining_enabled']
+                if portfolio_margining_enabled is True:
+                    ui.textEdit_balance.append('Portfolio Margining: ENABLED')
+                elif portfolio_margining_enabled is False:
+                    ui.textEdit_balance.append('Portfolio Margining: DISABLED')
+                else:
+                    pass
+
+                ui.textEdit_balance.append('Balance: ' +
+                                           str(round(summary_total['balance'], 4))
+                                           )
+                ui.textEdit_balance.append('DELTA TOTAL: ' +
+                                           str(round(summary_total['delta_total'], 4))
+                                           )
+                ui.textEdit_balance.append('Projected DELTA TOTAL: ' +
+                                           str(round(summary_total['projected_delta_total'], 4))
+                                           )
+                ui.textEdit_balance.append('Available funds: ' +
+                                           str(round(summary_total['available_funds'], 4))
+                                           )
+                ui.textEdit_balance.append('Equity: ' +
+                                           str(round(summary_total['equity'], 4))
+                                           )
+                ui.textEdit_balance.append('Total PL: ' +
+                                           str(round(summary_total['total_pl'], 4))
+                                           )
+                ui.textEdit_balance.append('Session RPL: ' +
+                                           str(round(summary_total['session_rpl'], 4))
+                                           )
+                ui.textEdit_balance.append('Session UPL: ' +
+                                           str(round(summary_total['session_upl'], 4))
+                                           )
+                ui.textEdit_balance.append('Futures PL: ' +
+                                           str(round(summary_total['futures_pl'], 4))
+                                           )
+                ui.textEdit_balance.append('Futures Session RPL: ' +
+                                           str(round(summary_total['futures_session_rpl'], 4))
+                                           )
+                ui.textEdit_balance.append('Futures Session UPL: ' +
+                                           str(round(summary_total['futures_session_upl'], 4))
+                                           )
+                ui.textEdit_balance.append('Margin Balance: ' +
+                                           str(round(summary_total['margin_balance'], 4))
+                                           )
+                ui.textEdit_balance.append('Initial Margin: ' +
+                                           str(round(summary_total['initial_margin'], 4))
+                                           )
+                ui.textEdit_balance.append('Maintenance Margin: ' +
+                                           str(round(summary_total['maintenance_margin'], 4))
+                                           )
+                ui.textEdit_balance.append('Projected Maintenance Margin: ' +
+                                           str(round(summary_total['projected_maintenance_margin'], 4))
+                                           )
+                ui.textEdit_balance.append('Size: ' +
+                                           str(round(instrument_position_hedge_size, 2)) +
+                                           'USD'
+                                           )
+                ui.textEdit_balance.append('Size Currency: ' +
+                                           str(round(instrument_position_hedge_size_currency, 8)) +
+                                           str(currency)
+                                           )
+
+            elif object_signal == 'textEdit_balance_after':
+                summary_total = info['info']
+                ui.textEdit_balance_after.clear()
+                ui.textEdit_balance_after.append('Account: ' +
+                                                 str(summary_total['system_name'])
+                                                 )
+                ui.textEdit_balance_after.append(str(summary_total['type']).upper() +
+                                                 ': ' +
+                                                 str(summary_total['username'])
+                                                 )
+                ui.textEdit_balance_after.append('Currency: ' +
+                                                 str(summary_total['currency'])
+                                                 )
+                ui.textEdit_balance_after.append('Options PL: ' +
+                                                 str(round(summary_total['options_pl'], 4))
+                                                 )
+                ui.textEdit_balance_after.append('Options Session RPL: ' +
+                                                 str(round(summary_total['options_session_rpl'], 4))
+                                                 )
+                ui.textEdit_balance_after.append('Options Session UPL: ' +
+                                                 str(round(summary_total['options_session_upl'], 4))
+                                                 )
+                ui.textEdit_balance_after.append('Options DELTA: ' +
+                                                 str(round(summary_total['options_delta'], 4))
+                                                 )
+                ui.textEdit_balance_after.append('Options GAMMA: ' +
+                                                 str(round(summary_total['options_gamma'], 4))
+                                                 )
+                ui.textEdit_balance_after.append('Options THETA: ' +
+                                                 str(round(summary_total['options_theta'], 4))
+                                                 )
+                ui.textEdit_balance_after.append('Options VEGA: ' +
+                                                 str(round(summary_total['options_vega'], 4))
+                                                 )
+
+            elif object_signal == 'Run_Tab':
+                summary_total = info['info']
+
+                ui.lineEdit_24.setText(
+                    str(round(summary_total['delta_total'], 4))
+                )
+
+                ui.lineEdit_26.setText(
+                    str(round(summary_total['options_delta'], 4))
+                )
+
+                ui.lineEdit_25.setText(
+                    str(round(summary_total['options_theta'], 4))
+                )
+
+                ui.lineEdit_27.setText(
+                    str(round(summary_total['options_gamma'], 4))
+                )
+
+                ui.lineEdit_28.setText(
+                    str(round(summary_total['options_vega'], 4))
+                )
+
+                ui.lineEdit_29.setText(
+                    str(summary_total['currency'])
+                )
+
+                ui.lineEdit_31.setText(
+                    str(round(summary_total['balance'], 4))
+                )
+
+                ui.lineEdit_30.setText(
+                    str(round(summary_total['maintenance_margin'], 4))
+                )
+
+                ui.lineEdit_32.setText(
+                    str(round(summary_total['total_pl'], 4))
+                )
+
+                ui.lineEdit_33.setText(
+                    str(round(summary_total['futures_pl'], 4))
+                )
+
+                ui.lineEdit_34.setText(
+                    str(round(summary_total['options_pl'], 4))
+                )
+
+            elif object_signal == 'lineEdit_24_btc_index':
+                b = str(info['info'])
+                ui.lineEdit_24_btc_index.setText(b)
+
+            elif object_signal == 'lineEdit_58':
+                ui.lineEdit_58.setText(str(info['info']))
+
+            elif object_signal == 'textEdit_monitor':
+                msg1 = str(info['msg'])
+                msg2 = msg1.replace('\n', '')
+                ui.textEdit_monitor.append(str(msg2))
+
+            elif object_signal == 'Hedge_Stopped':
+                from connection_hedge import connect
+                # New
+                ui.pushButton_submit_new_credintals.setEnabled(True)
+                ui.radioButton_testnet_true.setEnabled(True)
+                ui.radioButton_2_testnet_false.setEnabled(True)
+                ui.pushButton_submit_new_instruments.setEnabled(True)
+                ui.pushButton_submit_new_instruments_2.setEnabled(True)
+                # old:
+                red_icon = "./red_led_icon.png"
+                ui.label_34.setPixmap(QtGui.QPixmap(red_icon))
+                ui.pushButton_stop_arbitrage.setEnabled(False)
+                ui.pushButton_start_trading.setEnabled(True)
+                thread_btc_index_print()
+
+                connect.logwriter('***** Hedge_Stopped *****')
+
+            elif object_signal == 'led_connection':
+                led_color1 = str(info['led_color'])
+                if led_color1 == 'green':
+                    green_icon = "./green_led_icon.png"
+                    ui.label_29.setPixmap(QtGui.QPixmap(green_icon))
+                elif led_color1 == 'red':
+                    red_icon = "./red_led_icon.png"
+                    ui.label_29.setPixmap(QtGui.QPixmap(red_icon))
+                else:
+                    pass
+
+            elif object_signal == 'pushbutton_2_click_signal':
+                ui.textEdit_monitor.clear()
+
             else:
                 pass
-
-            ui.textEdit_balance.append('Balance: ' +
-                                       str(round(summary_total['balance'], 4))
-                                       )
-            ui.textEdit_balance.append('DELTA TOTAL: ' +
-                                       str(round(summary_total['delta_total'], 4))
-                                       )
-            ui.textEdit_balance.append('Projected DELTA TOTAL: ' +
-                                       str(round(summary_total['projected_delta_total'], 4))
-                                       )
-            ui.textEdit_balance.append('Available funds: ' +
-                                       str(round(summary_total['available_funds'], 4))
-                                       )
-            ui.textEdit_balance.append('Equity: ' +
-                                       str(round(summary_total['equity'], 4))
-                                       )
-            ui.textEdit_balance.append('Total PL: ' +
-                                       str(round(summary_total['total_pl'], 4))
-                                       )
-            ui.textEdit_balance.append('Session RPL: ' +
-                                       str(round(summary_total['session_rpl'], 4))
-                                       )
-            ui.textEdit_balance.append('Session UPL: ' +
-                                       str(round(summary_total['session_upl'], 4))
-                                       )
-            ui.textEdit_balance.append('Futures PL: ' +
-                                       str(round(summary_total['futures_pl'], 4))
-                                       )
-            ui.textEdit_balance.append('Futures Session RPL: ' +
-                                       str(round(summary_total['futures_session_rpl'], 4))
-                                       )
-            ui.textEdit_balance.append('Futures Session UPL: ' +
-                                       str(round(summary_total['futures_session_upl'], 4))
-                                       )
-            ui.textEdit_balance.append('Margin Balance: ' +
-                                       str(round(summary_total['margin_balance'], 4))
-                                       )
-            ui.textEdit_balance.append('Initial Margin: ' +
-                                       str(round(summary_total['initial_margin'], 4))
-                                       )
-            ui.textEdit_balance.append('Maintenance Margin: ' +
-                                       str(round(summary_total['maintenance_margin'], 4))
-                                       )
-            ui.textEdit_balance.append('Projected Maintenance Margin: ' +
-                                       str(round(summary_total['projected_maintenance_margin'], 4))
-                                       )
-            ui.textEdit_balance.append('Size: ' + str(round(instrument_position_hedge_size, 2)) + 'USD')
-            ui.textEdit_balance.append('Size Currency: ' + str(round(instrument_position_hedge_size_currency, 8)) + str(
-                currency))
-
-        elif object_signal == 'textEdit_balance_after':
-            summary_total = info['info']
-            ui.textEdit_balance_after.clear()
-            ui.textEdit_balance_after.append('Account: ' +
-                                             str(summary_total['system_name'])
-                                             )
-            ui.textEdit_balance_after.append(str(summary_total['type']).upper() +
-                                             ': ' +
-                                             str(summary_total['username'])
-                                             )
-            ui.textEdit_balance_after.append('Currency: ' +
-                                             str(summary_total['currency'])
-                                             )
-            ui.textEdit_balance_after.append('Options PL: ' +
-                                             str(round(summary_total['options_pl'], 4))
-                                             )
-            ui.textEdit_balance_after.append('Options Session RPL: ' +
-                                             str(round(summary_total['options_session_rpl'], 4))
-                                             )
-            ui.textEdit_balance_after.append('Options Session UPL: ' +
-                                             str(round(summary_total['options_session_upl'], 4))
-                                             )
-            ui.textEdit_balance_after.append('Options DELTA: ' +
-                                             str(round(summary_total['options_delta'], 4))
-                                             )
-            ui.textEdit_balance_after.append('Options GAMMA: ' +
-                                             str(round(summary_total['options_gamma'], 4))
-                                             )
-            ui.textEdit_balance_after.append('Options THETA: ' +
-                                             str(round(summary_total['options_theta'], 4))
-                                             )
-            ui.textEdit_balance_after.append('Options VEGA: ' +
-                                             str(round(summary_total['options_vega'], 4))
-                                             )
-        elif object_signal == 'Run_Tab':
-            summary_total = info['info']
-
-            ui.lineEdit_24.setText(
-                str(round(summary_total['delta_total'], 4))
-            )
-
-            ui.lineEdit_26.setText(
-                str(round(summary_total['options_delta'], 4))
-            )
-
-            ui.lineEdit_25.setText(
-                str(round(summary_total['options_theta'], 4))
-            )
-
-            ui.lineEdit_27.setText(
-                str(round(summary_total['options_gamma'], 4))
-            )
-
-            ui.lineEdit_28.setText(
-                str(round(summary_total['options_vega'], 4))
-            )
-
-            ui.lineEdit_29.setText(
-                str(summary_total['currency'])
-            )
-
-            ui.lineEdit_31.setText(
-                str(round(summary_total['balance'], 4))
-            )
-
-            ui.lineEdit_30.setText(
-                str(round(summary_total['maintenance_margin'], 4))
-            )
-
-            ui.lineEdit_32.setText(
-                str(round(summary_total['total_pl'], 4))
-            )
-
-            ui.lineEdit_33.setText(
-                str(round(summary_total['futures_pl'], 4))
-            )
-
-            ui.lineEdit_34.setText(
-                str(round(summary_total['options_pl'], 4))
-            )
-
-        elif object_signal == 'lineEdit_24_btc_index':
-            b = str(info['info'])
-            ui.lineEdit_24_btc_index.setText(b)
-        elif object_signal == 'lineEdit_58':
-            ui.lineEdit_58.setText(str(info['info']))
-        elif object_signal == 'textEdit_monitor':
-            ui.textEdit_monitor.append(str(info['info']))
-        elif object_signal == 'Hedge_Stopped':
-            red_icon = "./red_led_icon.png"
-            ui.label_34.setPixmap(QtGui.QPixmap(red_icon))
-            ui.pushButton_stop_arbitrage.setEnabled(False)
-            ui.pushButton_start_trading.setEnabled(True)
-            thread_btc_index_print()
-        else:
+        except Exception as er:
+            from lists import list_monitor_log
+            from connection_hedge import connect
+            list_monitor_log.append('***** ERROR - ui_signal1 error code 1213. ' + str(er))
+            connect.logwriter('***** ERROR - ui_signal1 error code 1214. ' + str(er))
+            time.sleep(5)
+        finally:
             pass
 
     def ui_signal2(info):
@@ -1131,22 +1229,6 @@ def run_hedge(ui):
             ui.textEdit_monitor.verticalScrollBar().setValue(999999)
         else:
             ui.textEdit_monitor.verticalScrollBar()
-
-    def led_connection():
-        green_icon = "./green_led_icon.png"
-        red_icon = "./red_led_icon.png"
-        led1 = 'red'
-        while True:
-            time.sleep(1)
-            if led1 == led_color():
-                pass
-            else:
-                if led_color() == 'green':
-                    ui.label_29.setPixmap(QtGui.QPixmap(green_icon))
-                elif led_color() == 'red':
-                    ui.label_29.setPixmap(QtGui.QPixmap(red_icon))
-                else:
-                    pass
 
     def message_box_start_hedge_confirmation():
         msg = QtWidgets.QMessageBox()
@@ -1203,6 +1285,8 @@ def run_hedge(ui):
             }
 
         except Exception as er:
+            from connection_hedge import connect
+            connect.logwriter('********** ERROR - Account summary print tab run **********' + str(er))
             list_monitor_log.append('********** ERROR - Account summary print tab run **********' + str(er))
             pass
         finally:
@@ -1240,6 +1324,8 @@ def run_hedge(ui):
                             'object_signal': 'lineEdit_58', 'info': str(item)})
                         time.sleep(1)
                 except Exception as error1:
+                    from connection_hedge import connect
+                    connect.logwriter('********** ERROR: BTC index print **********' + str(error1))
                     list_monitor_log.append('********** ERROR: BTC index print **********' + str(error1))
                     time.sleep(50)
                     pass
@@ -1265,6 +1351,9 @@ def run_hedge(ui):
                 account_summary_print_tab_run_hedge()  # Já tem singal na função
 
             except Exception as error1:
+                from connection_hedge import connect
+                connect.logwriter('********** ERROR: BTC index print while started hedge **********'
+                                  + str(error1))
                 list_monitor_log.append('********** ERROR: BTC index print while started hedge **********'
                                         + str(error1))
                 pass
@@ -1282,44 +1371,71 @@ def run_hedge(ui):
         btc_index_thread = threading.Thread(daemon=True, target=btc_index_print)
         btc_index_thread.start()
 
-    def clear_monitor():
-        ui.textEdit_monitor.clear()
-
     def lists_monitor():
         import time
-        from lists import list_monitor_log, list_monitor_print_log
+        from lists import list_monitor_log
+        from connection_hedge import connect
 
         counter = 0
+        led1 = led_color()
 
-        len_log_a = 0
+        if led1 == 'green':
+            info = {'object_signal': 'led_connection', 'led_color': 'green'}
+            sinal.ui_signal1.emit(info)
+        elif led1 == 'red':
+            info = {'object_signal': 'led_connection', 'led_color': 'red'}
+            sinal.ui_signal1.emit(info)
+        else:
+            connect.logwriter('*** ERROR - lists_monitor() Error Code:: 1296 ***')
+            msg2 = str('*** ERROR - lists_monitor() Error Code:: 1297 ***')
+            info = {'object_signal': 'textEdit_monitor', 'msg': msg2}
+            sinal.ui_signal1.emit(info)
+
         while True:
-            len_log_b = len(list_monitor_log)
-            if len_log_a == len_log_b:
-                time.sleep(0.001)
-                pass
-            elif len_log_a != len_log_b:
-                list_monitor_print_log.append(list_monitor_log[len_log_a:])
-                del (list_monitor_log[:len_log_a])
-                for i in range(len(list_monitor_print_log)):
-                    info1 = (list_monitor_print_log[i])
-                    sinal.ui_signal1.emit({
-                        'object_signal': 'textEdit_monitor', 'info': info1})
-                    del (list_monitor_print_log[i])
-                len_log_a = len(list_monitor_log)
-                time.sleep(0.001)
-                pass
-            else:
-                info1 = '********** ERROR: print Monitor **********'
-                sinal.ui_signal1.emit({
-                    'object_signal': 'textEdit_monitor', 'info': info1})
-                pass
-            counter = counter + 1
-            if counter >= 100000:
-                counter = 0
-                ui.pushButton_2.click()
-                time.sleep(0.5)
-                pass
-            else:
+            try:
+                if len(list_monitor_log) > 0:
+                    for i in list_monitor_log:
+                        info = {'object_signal': 'textEdit_monitor', 'msg':
+                                datetime.now().strftime("[%Y/%m/%d, %H:%M:%S] ") + str(i)}
+                        sinal.ui_signal1.emit(info)
+                        counter = counter + 1
+                    list_monitor_log.clear()
+                else:
+                    time.sleep(0.0001)
+
+                if led1 != led_color():
+                    if led_color() == 'green':
+                        led1 = led_color()
+                        info = {'object_signal': 'led_connection', 'led_color': 'green'}
+                        sinal.ui_signal1.emit(info)
+                    elif led_color() == 'red':
+                        led1 = led_color()
+                        info = {'object_signal': 'led_connection', 'led_color': 'red'}
+                        sinal.ui_signal1.emit(info)
+                    else:
+                        connect.logwriter('*** ERROR - lists_monitor() Error Code:: 1397 ***')
+                        msg4 = str('*** ERROR - lists_monitor() Error Code:: 1398 ***')
+                        info = {'object_signal': 'textEdit_monitor', 'msg': msg4}
+                        sinal.ui_signal1.emit(info)
+                else:
+                    pass
+
+                if counter >= 10000:
+                    counter = 0
+                    info = {'object_signal': 'pushbutton_2_click_signal', 'msg': ''}
+                    sinal.ui_signal1.emit(info)
+                    time.sleep(0.5)
+                else:
+                    pass
+
+            except Exception as er:
+                from connection_hedge import connect
+                connect.logwriter(str(er) + ' Error Code:: 1414')
+                msg5 = str('*** ERROR - lists_monitor() Error Code:: 1415: ' + str(er) + ' ***')
+                info = {'object_signal': 'textEdit_monitor', 'msg': msg5}
+                sinal.ui_signal1.emit(info)
+                time.sleep(5)
+            finally:
                 pass
 
     def thread_lists_monitor():
@@ -1346,6 +1462,7 @@ def run_hedge(ui):
 
     def hedge():
         import time
+        from connection_hedge import connect
         global greeks_value_dict
         global hedge_on_off
 
@@ -1359,7 +1476,8 @@ def run_hedge(ui):
         ui.pushButton_start_trading.setEnabled(False)
         ui.pushButton.setText('Hedge\nStarted')
 
-        list_monitor_log.append('*** Hedge started ***')
+        list_monitor_log.append('***** Hedge started *****')
+        connect.logwriter('***** Hedge started *****')
 
         # Args fixed
         hedge_instrument = str(ConfigAndInstrumentsSaved().instrument_name_construction_from_file(instrument_number=1))
@@ -1438,10 +1556,14 @@ def run_hedge(ui):
                         pass
                         # time.sleep(10)
                     else:
-                        list_monitor_log.append('********** ERROR while running hedge - line 1415 **********')
+                        from connection_hedge import connect
+                        connect.logwriter('********** ERROR while running hedge - line 1553 **********')
+                        list_monitor_log.append('********** ERROR while running hedge - line 1554 **********')
                         time.sleep(20)
                         pass
                 except Exception as error1:
+                    from connection_hedge import connect
+                    connect.logwriter('********** ERROR while running hedge **********' + str(error1))
                     list_monitor_log.append('********** ERROR while running hedge **********' + str(error1))
                     time.sleep(50)
                     pass
@@ -1452,13 +1574,13 @@ def run_hedge(ui):
                 'object_signal': 'Hedge_Stopped', 'info': ''})
             pass
         else:
-            list_monitor_log.append('********** ERROR while running hedge - line 1261 **********')
+            from connection_hedge import connect
+            connect.logwriter('********** ERROR while running hedge - line 1571 **********')
+            list_monitor_log.append('********** ERROR while running hedge - line 1572 **********')
             pass
 
     sinal.ui_signal1.connect(ui_signal1)
     sinal.ui_signal2.connect(ui_signal2)
-    led_thread = threading.Thread(daemon=True, target=led_connection)
-    led_thread.start()
     thread_lists_monitor()
     ui.pushButton_start_print_loglog.hide()
     ui.pushButton_2.hide()
@@ -1466,7 +1588,7 @@ def run_hedge(ui):
     thread_btc_index_print()
     ui.pushButton_start_trading.clicked.connect(message_box_start_hedge_confirmation)
     ui.pushButton_stop_arbitrage.clicked.connect(hedge_stop)
-    ui.pushButton_2.clicked.connect(clear_monitor)
+    ui.checkBox_autoScrollBar.clicked.connect(autoscroll_monitor)
 
 
 if __name__ == "__main__":
