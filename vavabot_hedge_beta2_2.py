@@ -41,7 +41,7 @@ class CredentialsSaved:
 
         if os.path.isfile('api-key_hedge.txt') is False:
             with open('api-key_hedge.txt', 'a') as api_key_save_file:
-                api_key_save_file.write(str('<Type yout Deribit Key>'))
+                api_key_save_file.write(str('<Type your Deribit Key>'))
         else:
             pass
 
@@ -1317,6 +1317,7 @@ def run_hedge(ui):
     def btc_index_print():
         import time
         global index_greeks_print_on_off
+        from lists import list_monitor_log
 
         if instrument_currency_saved() == 'ERROR':
             message_box_instrument_syntax_error()
@@ -1327,7 +1328,7 @@ def run_hedge(ui):
             sinal.ui_signal1.emit({
                 'object_signal': 'btc_index_print', 'info': ''})
 
-            if CredentialsSaved().api_secret_saved() == '<Type yout Deribit Key>' or \
+            if CredentialsSaved().api_secret_saved() == '<Type your Deribit Key>' or \
                     CredentialsSaved.secret_key_saved() == '<Type your Deribit Secret Key>':
                 unauthorized_token_code_13009_or_13004 = True
             else:
@@ -1344,7 +1345,7 @@ def run_hedge(ui):
                         'object_signal': 'lineEdit_24_btc_index', 'info': b})
 
                     if unauthorized_token_code_13009_or_13004 is True:
-                        pass
+                        list_monitor_log.append('***** UPDATE CREDENTIALS - VERIFY API AND SECRET KEYS *****')
                     else:
                         account_summary_print_tab_run_hedge()  # Já tem signal na função
 
