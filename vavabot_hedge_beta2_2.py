@@ -1346,6 +1346,7 @@ def run_hedge(ui):
 
                     if unauthorized_token_code_13009_or_13004 is True:
                         list_monitor_log.append('***** UPDATE CREDENTIALS - VERIFY API AND SECRET KEYS *****')
+                        time.sleep(5)
                     else:
                         account_summary_print_tab_run_hedge()  # Já tem signal na função
 
