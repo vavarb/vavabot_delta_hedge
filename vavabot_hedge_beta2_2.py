@@ -1225,8 +1225,18 @@ def run_hedge(ui):
             elif object_signal == 'pushbutton_2_click_signal':
                 ui.textEdit_monitor.clear()
 
+            elif object_signal == 'btc_index_print':
+                ui.pushButton.setEnabled(False)
+                ui.pushButton.setText('Chronometer\nEnabled')
+                ui.pushButton_stop_arbitrage.setEnabled(False)
+                ui.pushButton_start_trading.setEnabled(True)
+
+                red_icon = "./red_led_icon.png"
+                ui.label_34.setPixmap(QtGui.QPixmap(red_icon))
+
             else:
                 pass
+
         except Exception as er:
             from lists import list_monitor_log
             from connection_hedge import connect
@@ -1313,13 +1323,9 @@ def run_hedge(ui):
 
         else:
             index_greeks_print_on_off = 'on'
-            ui.pushButton.setEnabled(False)
-            ui.pushButton.setText('Chronometer\nEnabled')
-            ui.pushButton_stop_arbitrage.setEnabled(False)
-            ui.pushButton_start_trading.setEnabled(True)
 
-            red_icon = "./red_led_icon.png"
-            ui.label_34.setPixmap(QtGui.QPixmap(red_icon))
+            sinal.ui_signal1.emit({
+                'object_signal': 'btc_index_print', 'info': ''})
 
             if CredentialsSaved().api_secret_saved() == '<Type yout Deribit Key>' or \
                     CredentialsSaved.secret_key_saved() == '<Type your Deribit Secret Key>':
