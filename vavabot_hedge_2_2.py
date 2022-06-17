@@ -1263,6 +1263,21 @@ def run_hedge(ui):
                 red_icon = "./red_led_icon.png"
                 ui.label_34.setPixmap(QtGui.QPixmap(red_icon))
 
+            elif object_signal == 'Hedge_Started':
+                ui.pushButton_submit_new_credintals.setEnabled(False)
+                ui.radioButton_testnet_true.setEnabled(False)
+                ui.radioButton_2_testnet_false.setEnabled(False)
+                ui.pushButton_submit_new_instruments.setEnabled(False)
+                ui.pushButton_submit_new_instruments_2.setEnabled(False)
+                ui.pushButton_start_trading.setEnabled(False)
+                ui.pushButton_stop_arbitrage.setEnabled(True)
+                ui.pushButton_start_trading.setEnabled(False)
+                ui.pushButton.setText('Hedge\nStarted')
+
+            elif object_signal == 'Hedge_Started_icon':
+                green_icon = "./green_led_icon.png"
+                ui.label_34.setPixmap(QtGui.QPixmap(green_icon))
+
             else:
                 pass
 
@@ -1526,15 +1541,8 @@ def run_hedge(ui):
         global greeks_value_dict
         global hedge_on_off
 
-        ui.pushButton_submit_new_credintals.setEnabled(False)
-        ui.radioButton_testnet_true.setEnabled(False)
-        ui.radioButton_2_testnet_false.setEnabled(False)
-        ui.pushButton_submit_new_instruments.setEnabled(False)
-        ui.pushButton_submit_new_instruments_2.setEnabled(False)
-        ui.pushButton_start_trading.setEnabled(False)
-        ui.pushButton_stop_arbitrage.setEnabled(True)
-        ui.pushButton_start_trading.setEnabled(False)
-        ui.pushButton.setText('Hedge\nStarted')
+        sinal.ui_signal1.emit({
+                'object_signal': 'Hedge_Started', 'info': ''})
 
         list_monitor_log.append('***** Hedge started *****')
         connect.logwriter('***** Hedge started *****')
@@ -1556,8 +1564,8 @@ def run_hedge(ui):
             global hedge_on_off
             hedge_on_off = 'on'
 
-            green_icon = "./green_led_icon.png"
-            ui.label_34.setPixmap(QtGui.QPixmap(green_icon))
+            sinal.ui_signal1.emit({
+                'object_signal': 'Hedge_Started_icon', 'info': ''})
 
             while hedge_on_off == 'on':
                 try:
@@ -1570,7 +1578,6 @@ def run_hedge(ui):
 
                     if float(hedge_superior_limit) >= float(hedge_greeks_value) >= float(hedge_inferior_limit):
                         list_monitor_log.append('*** Values according to defined parameters ***')
-                        pass
                         time.sleep(2)
 
                     elif float(hedge_greeks_value) > float(hedge_superior_limit):
@@ -1591,9 +1598,9 @@ def run_hedge(ui):
                         list_monitor_log.append('*** Sell order sent ***')
                         list_monitor_log.append('Instrument: ' + str(hedge_instrument))
                         list_monitor_log.append('Amount:' + str(amount_hedge))
-                        time.sleep(1)
-                        pass
-                        # time.sleep(10)
+                        time.sleep(5)
+                        connect.cancel_all()
+
                     elif float(hedge_greeks_value) < float(hedge_inferior_limit):
                         amount_in_btc = abs(float(hedge_target) - float(hedge_greeks_value))
                         order_book = connect.get_order_book(instrument_name=hedge_instrument)
@@ -1612,32 +1619,29 @@ def run_hedge(ui):
                         list_monitor_log.append('*** Buy order sent ***')
                         list_monitor_log.append('Instrument: ' + str(hedge_instrument))
                         list_monitor_log.append('Amount:' + str(amount_hedge))
-                        time.sleep(1)
-                        pass
-                        # time.sleep(10)
+                        time.sleep(5)
+                        connect.cancel_all()
+
                     else:
                         from connection_hedge import connect
                         connect.logwriter('********** ERROR while running hedge - line 1553 **********')
                         list_monitor_log.append('********** ERROR while running hedge - line 1554 **********')
                         time.sleep(20)
-                        pass
+
                 except Exception as error1:
                     from connection_hedge import connect
                     connect.logwriter('********** ERROR while running hedge **********' + str(error1))
                     list_monitor_log.append('********** ERROR while running hedge **********' + str(error1))
                     time.sleep(50)
-                    pass
                 finally:
                     pass
             list_monitor_log.append('***** Hedge Stopped *****')
             sinal.ui_signal1.emit({
                 'object_signal': 'Hedge_Stopped', 'info': ''})
-            pass
         else:
             from connection_hedge import connect
             connect.logwriter('********** ERROR while running hedge - line 1571 **********')
             list_monitor_log.append('********** ERROR while running hedge - line 1572 **********')
-            pass
 
     sinal.ui_signal1.connect(ui_signal1)
     sinal.ui_signal2.connect(ui_signal2)
