@@ -964,16 +964,25 @@ def summary(ui):
             if instrument_currency_saved() == 'ERROR':
                 message_box_instrument_syntax_error()
             else:
-                currency = str(instrument_currency_saved())
-                summary_total = connect.get_account_summary(currency=currency)
+                if CredentialsSaved().api_secret_saved() == '<Type your Deribit Key>' or \
+                        CredentialsSaved.secret_key_saved() == '<Type your Deribit Secret Key>':
+                    unauthorized_token_code_13009_or_13004 = True
+                else:
+                    unauthorized_token_code_13009_or_13004 = False
 
-                instrument_name = str(
-                    ConfigAndInstrumentsSaved().instrument_name_construction_from_file(instrument_number=1))
-                position_instrument_hedge = connect.get_position(instrument_name=instrument_name)
+                if unauthorized_token_code_13009_or_13004 is False:
+                    currency = str(instrument_currency_saved())
+                    summary_total = connect.get_account_summary(currency=currency)
 
-                sinal.ui_signal1.emit({
-                    'object_signal': 'textEdit_balance', 'info': summary_total, 'info2': position_instrument_hedge,
-                    'info3': str(currency)})
+                    instrument_name = str(
+                        ConfigAndInstrumentsSaved().instrument_name_construction_from_file(instrument_number=1))
+                    position_instrument_hedge = connect.get_position(instrument_name=instrument_name)
+
+                    sinal.ui_signal1.emit({
+                        'object_signal': 'textEdit_balance', 'info': summary_total, 'info2': position_instrument_hedge,
+                        'info3': str(currency)})
+                else:
+                    pass
 
         except Exception as er:
             ui.textEdit_balance.append('********** ERROR: ' + str(er) + ' **********')
@@ -989,11 +998,20 @@ def summary(ui):
             if instrument_currency_saved() == 'ERROR':
                 message_box_instrument_syntax_error()
             else:
-                currency = str(instrument_currency_saved())
-                summary_total = connect.get_account_summary(currency=currency)
+                if CredentialsSaved().api_secret_saved() == '<Type your Deribit Key>' or \
+                        CredentialsSaved.secret_key_saved() == '<Type your Deribit Secret Key>':
+                    unauthorized_token_code_13009_or_13004 = True
+                else:
+                    unauthorized_token_code_13009_or_13004 = False
 
-                sinal.ui_signal1.emit({
-                    'object_signal': 'textEdit_balance_after', 'info': summary_total})
+                if unauthorized_token_code_13009_or_13004 is False:
+                    currency = str(instrument_currency_saved())
+                    summary_total = connect.get_account_summary(currency=currency)
+
+                    sinal.ui_signal1.emit({
+                        'object_signal': 'textEdit_balance_after', 'info': summary_total})
+                else:
+                    pass
 
         except Exception as er:
             from lists import list_monitor_log
