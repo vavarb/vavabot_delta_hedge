@@ -982,6 +982,8 @@ def summary(ui):
                         'object_signal': 'textEdit_balance', 'info': summary_total, 'info2': position_instrument_hedge,
                         'info3': str(currency)})
                 else:
+                    sinal.ui_signal1.emit({
+                        'object_signal': 'textEdit_balance_unauthorized_token_code_13009_or_13004', 'info': ''})
                     pass
 
         except Exception as er:
@@ -1117,6 +1119,15 @@ def run_hedge(ui):
                                            str(round(instrument_position_hedge_size_currency, 8)) +
                                            str(currency)
                                            )
+
+            elif object_signal == 'textEdit_balance_unauthorized_token_code_13009_or_13004':
+                ui.textEdit_balance.clear()
+                ui.textEdit_balance.append('***************')
+                ui.textEdit_balance.append('Verify Credentials')
+                ui.textEdit_balance.append('Type your Deribit')
+                ui.textEdit_balance.append('API and')
+                ui.textEdit_balance.append('SECRET Keys')
+                ui.textEdit_balance.append('***************')
 
             elif object_signal == 'textEdit_balance_after':
                 summary_total = info['info']
