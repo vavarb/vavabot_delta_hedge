@@ -37,6 +37,14 @@ class CredentialsSaved:
     @staticmethod
     def api_secret_saved():
         from lists import list_monitor_log
+        import os
+
+        if os.path.isfile('api-key_hedge.txt') is False:
+            with open('api-key_hedge.txt', 'a') as api_key_save_file:
+                api_key_save_file.write(str('<Type yout Deribit Key>'))
+        else:
+            pass
+
         with open('api-key_hedge.txt', 'r') as api_secret_saved_file:
             api_secret_saved_file_read = str(api_secret_saved_file.read())
         list_monitor_log.append('*** API key: ' + str(api_secret_saved_file_read) + ' ***')
@@ -45,6 +53,14 @@ class CredentialsSaved:
     @staticmethod
     def secret_key_saved():
         from lists import list_monitor_log
+        import os
+
+        if os.path.isfile('secret-key_hedge.txt') is False:
+            with open('secret-key_hedge.txt', 'a') as api_key_save_file:
+                api_key_save_file.write(str('<Type your Deribit Secret Key>'))
+        else:
+            pass
+
         with open('secret-key_hedge.txt', 'r') as secret_key_saved_file:
             secret_key_saved_file_read = str(secret_key_saved_file.read())
         list_monitor_log.append('*** SECRET key: ' + str(secret_key_saved_file_read) + ' ***')
@@ -184,6 +200,7 @@ class Deribit:
                 self.logwriter(str(out) + ' ID: ' + str(msg['id']))
                 list_monitor_log.append(str(out) + ' ID: ' + str(msg['id']))
                 return out['error']
+
             elif str(msg['method']) == 'public/set_heartbeat':
                 if 'too_many_requests' in str(out) or '10028' in str(out) or 'too_many_requests' in str(
                         out['result']) or '10028' in str(out['result']):
@@ -484,11 +501,11 @@ class ConfigAndInstrumentsSaved:
                 list_instrument_name.append(i['instrument_name'])
             if instrument_name in list_instrument_name:
                 list_instrument_name.clear()
-                time.sleep(0.3)
+                # time.sleep(0.3)
                 return 'instrument available'
             else:
                 list_instrument_name.clear()
-                time.sleep(0.3)
+                # time.sleep(0.3)
                 return 'instrument NO available'
         except Exception as er:
             sinal.textedit_instruments_saved_signal.emit('*** ERROR - Instrument NO Checked ***')
@@ -1290,6 +1307,7 @@ def run_hedge(ui):
     def btc_index_print():
         import time
         global index_greeks_print_on_off
+
         if instrument_currency_saved() == 'ERROR':
             message_box_instrument_syntax_error()
 
@@ -1303,6 +1321,12 @@ def run_hedge(ui):
             red_icon = "./red_led_icon.png"
             ui.label_34.setPixmap(QtGui.QPixmap(red_icon))
 
+            if CredentialsSaved().api_secret_saved() == '<Type yout Deribit Key>' or \
+                    CredentialsSaved.secret_key_saved() == '<Type your Deribit Secret Key>':
+                unauthorized_token_code_13009_or_13004 = True
+            else:
+                unauthorized_token_code_13009_or_13004 = False
+
             while index_greeks_print_on_off == 'on':
                 try:
                     from connection_hedge import connect
@@ -1313,7 +1337,11 @@ def run_hedge(ui):
                     sinal.ui_signal1.emit({
                         'object_signal': 'lineEdit_24_btc_index', 'info': b})
 
-                    account_summary_print_tab_run_hedge()  # Já tem signal na função
+                    if unauthorized_token_code_13009_or_13004 is True:
+                        pass
+                    else:
+                        account_summary_print_tab_run_hedge()  # Já tem signal na função
+
                     for item in range(10, -1, -1):
                         sinal.ui_signal1.emit({
                             'object_signal': 'lineEdit_58', 'info': str(item)})
