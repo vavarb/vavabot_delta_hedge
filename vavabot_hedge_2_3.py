@@ -880,7 +880,7 @@ def config(ui):
 
     def set_version_and_icon():
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "VavaBot - Delta Hedge 2.2"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "VavaBot - Delta Hedge 2.3"))
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(".../icon_noctuline_wall_e_eve_hedge.ico"),
@@ -1051,22 +1051,42 @@ def config(ui):
                 pass
 
             else:
-                with open('targets_hedge.txt', 'w') as config_save_file:
-                    config_save_file.write(
-                        str(ui.comboBox_value_given_4.currentText()) +
-                        '\n Hedge Target: ' + str.replace(str(
-                            ui.lineEdit_currency_exchange_rate_for_upper_and_lower1_2.text()), ',', '.') +
-                        '\n SUPERIOR Limit: ' + str(
+                try:
+                    if float(str.replace(str(
+                            ui.lineEdit_currency_exchange_rate_for_upper_and_lower1_2.text()), ',', '.')) == 0 or \
                             float(str.replace(str(
-                                ui.lineEdit_currency_exchange_rate_for_upper_and_lower1_2.text()), ',', '.')) +
-                            abs(float(str.replace(str(
-                                ui.lineEdit_currency_exchange_rate_upper1_2.text()), ',', '.')))) +
-                        '\n INFERIOR Limit: ' + str(
+                                ui.lineEdit_currency_exchange_rate_upper1_2.text()), ',', '.')) == 0 or \
                             float(str.replace(str(
-                                ui.lineEdit_currency_exchange_rate_for_upper_and_lower1_2.text()), ',', '.')) -
-                            abs(float(str.replace(str(
-                                ui.lineEdit_currency_exchange_rate_lower1_3.text()), ',', '.'))))
-                    )
+                                ui.lineEdit_currency_exchange_rate_lower1_3.text()), ',', '.')) == 0:
+                        pass
+                    else:
+                        pass
+
+                    with open('targets_hedge.txt', 'w') as config_save_file:
+                        config_save_file.write(
+                            str(ui.comboBox_value_given_4.currentText()) +
+                            '\n Hedge Target: ' + str.replace(str(
+                                ui.lineEdit_currency_exchange_rate_for_upper_and_lower1_2.text()), ',', '.') +
+                            '\n SUPERIOR Limit: ' + str(
+                                float(str.replace(str(
+                                    ui.lineEdit_currency_exchange_rate_for_upper_and_lower1_2.text()), ',', '.')) +
+                                abs(float(str.replace(str(
+                                    ui.lineEdit_currency_exchange_rate_upper1_2.text()), ',', '.')))) +
+                            '\n INFERIOR Limit: ' + str(
+                                float(str.replace(str(
+                                    ui.lineEdit_currency_exchange_rate_for_upper_and_lower1_2.text()), ',', '.')) -
+                                abs(float(str.replace(str(
+                                    ui.lineEdit_currency_exchange_rate_lower1_3.text()), ',', '.'))))
+                        )
+
+                except ValueError:
+                    msg = QtWidgets.QMessageBox()
+                    msg.setIcon(QtWidgets.QMessageBox.Information)
+                    msg.setText('Only numbers are accepted')
+                    msg.setWindowTitle('*** ERROR ***')
+                    msg.exec_()
+                    pass
+
                 config_saved_print()
 
         except Exception as er:
