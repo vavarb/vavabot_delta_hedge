@@ -1408,8 +1408,8 @@ def run_hedge(ui):
 
                 connect.logwriter('***** Hedge_Stopped *****')
 
-                ui.lineEdit_orders_rate.setEnabled(False)
-                ui.pushButton_orders_rate.setEnabled(False)
+                ui.lineEdit_orders_rate.setEnabled(True)
+                ui.pushButton_orders_rate.setEnabled(True)
 
             elif object_signal == 'led_connection':
                 led_color1 = str(info['led_color'])
