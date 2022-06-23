@@ -163,6 +163,24 @@ class Ui_MainWindow(object):
         self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_2.setObjectName("frame_2")
+
+        self.lineEdit_orders_rate = QtWidgets.QLineEdit(self.frame_2)
+        self.lineEdit_orders_rate.setGeometry(QtCore.QRect(610, 185, 32, 20))
+        self.lineEdit_orders_rate.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.lineEdit_orders_rate.setObjectName("lineEdit_orders_rate")
+
+        self.pushButton_orders_rate = QtWidgets.QPushButton(self.frame_2)
+        self.pushButton_orders_rate.setGeometry(QtCore.QRect(591, 209, 70, 35))
+        font = QtGui.QFont()
+        font.setFamily("MS Shell Dlg 2")
+        font.setPointSize(12)
+        font.setBold(True)
+        font.setItalic(False)
+        font.setWeight(50)
+        self.pushButton_orders_rate.setFont(font)
+        self.pushButton_orders_rate.setStyleSheet("font: 8pt \"MS Shell Dlg 2\";")
+        self.pushButton_orders_rate.setObjectName("pushButton_submit_new_targets")
+
         self.pushButton_submit_new_instruments = QtWidgets.QPushButton(self.frame_2)
         self.pushButton_submit_new_instruments.setGeometry(QtCore.QRect(420, 100, 231, 61))
         font = QtGui.QFont()
@@ -335,6 +353,9 @@ class Ui_MainWindow(object):
         self.line_5.raise_()
         self.horizontalLayoutWidget.raise_()
         self.pushButton_submit_new_instruments.raise_()
+
+        self.pushButton_orders_rate.raise_()
+
         self.label_8.raise_()
         self.formLayoutWidget_3.raise_()
         self.textEdit_instruments_saved_2.raise_()
@@ -781,7 +802,11 @@ class Ui_MainWindow(object):
         MainWindow.setTabOrder(self.lineEdit_currency_exchange_rate_for_upper_and_lower1_2, self.lineEdit_currency_exchange_rate_upper1_2)
         MainWindow.setTabOrder(self.lineEdit_currency_exchange_rate_upper1_2, self.lineEdit_currency_exchange_rate_lower1_3)
         MainWindow.setTabOrder(self.lineEdit_currency_exchange_rate_lower1_3, self.pushButton_submit_new_instruments_2)
-        MainWindow.setTabOrder(self.pushButton_submit_new_instruments_2, self.pushButton_update_balance)
+
+        MainWindow.setTabOrder(self.pushButton_submit_new_instruments_2, self.lineEdit_orders_rate)
+        MainWindow.setTabOrder(self.lineEdit_orders_rate, self.pushButton_orders_rate)
+
+        MainWindow.setTabOrder(self.pushButton_orders_rate, self.pushButton_update_balance)
         MainWindow.setTabOrder(self.pushButton_update_balance, self.pushButton_start_trading)
         MainWindow.setTabOrder(self.pushButton_start_trading, self.pushButton_stop_arbitrage)
         MainWindow.setTabOrder(self.pushButton_stop_arbitrage, self.checkBox_autoScrollBar)
@@ -828,6 +853,7 @@ class Ui_MainWindow(object):
         self.label_10.setText(_translate("MainWindow", "Settings:"))
         self.label_6.setText(_translate("MainWindow", "TextLabel"))
         self.label_11.setText(_translate("MainWindow", "TextLabel"))
+        self.pushButton_orders_rate.setText(_translate("MainWindow", "Orders/sec\nUpdate"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_instruments), _translate("MainWindow", "Config"))
         self.label_42.setText(_translate("MainWindow", "TOTAL Account Summary"))
         self.pushButton_update_balance.setText(_translate("MainWindow", "UPDATE\n"
