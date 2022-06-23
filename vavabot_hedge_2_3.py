@@ -1604,6 +1604,7 @@ def run_hedge(ui):
                                   + str(error1))
                 list_monitor_log.append('********** ERROR: BTC index print while started hedge **********'
                                         + str(error1))
+                time.sleep(10)
                 pass
             finally:
                 pass
