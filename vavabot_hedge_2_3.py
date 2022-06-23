@@ -886,6 +886,9 @@ def config(ui):
         icon.addPixmap(QtGui.QPixmap(".../icon_noctuline_wall_e_eve_hedge.ico"),
                        QtGui.QIcon.Normal, QtGui.QIcon.Off)
 
+        ui.pushButton_submit_new_instruments_2.setText(_translate("MainWindow", "UPDATE Setup"))
+        ui.label_10.setText(_translate("MainWindow", "Setup:"))
+
     def set_date():
         date_now_instrument = QtCore.QDate.currentDate()
         ui.lineEdit_maturity_instrumet1.setDate(date_now_instrument.addDays(-1))
@@ -1045,7 +1048,7 @@ def config(ui):
             if ui.comboBox_value_given_4.currentText() == 'Set Hedge Method':
                 msg = QtWidgets.QMessageBox()
                 msg.setIcon(QtWidgets.QMessageBox.Information)
-                msg.setText('All fields config are required - ERROR')
+                msg.setText('All fields Setup are required - ERROR')
                 msg.setWindowTitle('***** ERROR *****')
                 msg.exec_()
                 pass
