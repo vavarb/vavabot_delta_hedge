@@ -13,6 +13,8 @@ global greeks_value_dict
 global hedge_on_off
 global connect
 global counter_send_order
+global sender_rate_dict
+global delay_delay
 
 
 # Classe de Sinais.
@@ -138,6 +140,14 @@ class Deribit:
 
         from lists import list_monitor_log
         global counter_send_order
+        global sender_rate_dict
+        global delay_delay
+
+        delay_delay = 0
+
+        sender_rate_dict = dict()
+        sender_rate_dict['time_1'] = time.time()
+        sender_rate_dict['counter_send_order_for_sender_rate'] = 1
 
         counter_send_order = 0
 
@@ -174,6 +184,60 @@ class Deribit:
             list_monitor_log.append('***** auth ERROR:' + ' error: ' + str(er) + ' *****')
             self.logwriter('***** auth ERROR:' + ' error: ' + str(er) + ' *****')
 
+    # noinspection PyMethodMayBeStatic
+    def sender_rate(self, counter_send_order_for_sender_rate, time_now):
+        global sender_rate_dict
+
+        if float(time_now - sender_rate_dict['time_1']) >= 120:
+            delta_counter_send_order = float(
+                counter_send_order_for_sender_rate) - float(sender_rate_dict['counter_send_order_for_sender_rate'])
+            delta_time_for_sender_rate = float(time_now - sender_rate_dict['time_1'])
+            rate_sender_orders = float(delta_counter_send_order) / float(delta_time_for_sender_rate)
+
+            sender_rate_dict['time_1'] = time_now
+            sender_rate_dict['counter_send_order_for_sender_rate'] = float(counter_send_order_for_sender_rate)
+
+            return round(rate_sender_orders, 2)
+        else:
+            return False
+
+    def _delay(self, sender_rate_rate_):
+        global delay_delay
+        from lists import list_monitor_log
+
+        if sender_rate_rate_ is not False:
+            orders_per_second_ = float(ConfigAndInstrumentsSaved().orders_rate_saved())
+
+            list_monitor_log.append('*** Check Sent Orders Rate ***')
+            self.logwriter(
+                '*** Sent Orders Rate: ' + str(sender_rate_rate_) + ' Orders/Second ***')
+            if float(sender_rate_rate_) > float(orders_per_second_):
+                delay_delay = round(delay_delay + ((1 / orders_per_second_) - (1 / sender_rate_rate_)), 2)
+                list_monitor_log.append('*** Sent Orders Rate Checked: > ' + str(orders_per_second_) +
+                                        ' Orders/second ***')
+                self.logwriter('*** Setup New Delay to send order: ' + str(delay_delay) + ' seconds ***')
+            else:
+                list_monitor_log.append('*** Sent Orders Rate Checked: < ' + str(orders_per_second_) +
+                                        ' Orders/second ***')
+                if delay_delay == 0:
+                    self.logwriter('*** Setup Delay to send order Unmodified ***')
+                else:
+                    if round(delay_delay - ((1 / sender_rate_rate_) - (1 / orders_per_second_)), 2) > 0:
+                        delay_delay = round(delay_delay - ((1 / sender_rate_rate_) - (1 / orders_per_second_)), 2)
+                        self.logwriter('*** Setup New Delay to send order: ' + str(delay_delay) + ' seconds ***')
+                    else:
+                        delay_delay = 0
+                        self.logwriter('*** Setup New Delay to send order: ' + str(delay_delay) + ' seconds ***')
+            if delay_delay < 0:
+                return 0
+            else:
+                return float(delay_delay)
+        else:
+            if delay_delay < 0:
+                return 0
+            else:
+                return float(delay_delay)
+
     def _sender(self, msg):
         from lists import list_monitor_log
 
@@ -195,6 +259,14 @@ class Deribit:
 
             self._WSS.send(json.dumps(msg))
             out = json.loads(self._WSS.recv())
+
+            delay = self._delay(sender_rate_rate_=self.sender_rate(
+                counter_send_order_for_sender_rate=counter_send_order, time_now=time.time()))
+
+            if delay > 0:
+                time.sleep(delay)
+            else:
+                pass
 
             if 'error' in str(out):
                 self.logwriter(str(out) + ' ID: ' + str(msg['id']))
@@ -452,6 +524,41 @@ class ConfigAndInstrumentsSaved:
     def __init__(self):
         self.self = self
         self.instrument_number = None
+
+    @staticmethod
+    def orders_rate_saved():
+        from lists import list_monitor_log
+        import os
+
+        if os.path.isfile('send_orders_rate.txt') is False:
+            with open('send_orders_rate.txt', 'a') as send_orders_rate_file:
+                send_orders_rate_file.write('5')
+        else:
+            pass
+
+        with open('send_orders_rate.txt', 'r') as send_orders_rate_file:
+            send_orders_rate_file_read = str(send_orders_rate_file.read())
+
+        list_monitor_log.append('*** Order/Second Setup: ' + str(send_orders_rate_file_read) + ' ***')
+
+        return round(float(send_orders_rate_file_read), 2)
+
+    @staticmethod
+    def orders_rate_saved2():
+        from connection_hedge import connect
+        import os
+
+        if os.path.isfile('send_orders_rate.txt') is False:
+            with open('send_orders_rate.txt', 'a') as send_orders_rate_file:
+                send_orders_rate_file.write('5')
+        else:
+            pass
+
+        with open('send_orders_rate.txt', 'r') as send_orders_rate_file:
+            send_orders_rate_file_read = str(send_orders_rate_file.read())
+
+        ui.lineEdit_orders_rate.setText(str(send_orders_rate_file_read))
+        connect.logwriter('*** Order/Second Setup: ' + str(send_orders_rate_file_read) + ' ***')
 
     @staticmethod
     def instruments_check():
@@ -733,6 +840,44 @@ def credentials(ui):
 
 # noinspection PyShadowingNames
 def config(ui):
+    def save_orders_rate():
+        from connection_hedge import connect
+        import os
+
+        try:
+            orders_per_second_from_line_edit = round(float(str.replace(ui.lineEdit_orders_rate.text(), ',', '.')), 2)
+        except ValueError:
+            orders_per_second_from_line_edit = float(5)
+            msg = QtWidgets.QMessageBox()
+            msg.setIcon(QtWidgets.QMessageBox.Information)
+            msg.setText('Order/Second must be > 0')
+            msg.setWindowTitle('***** ERROR *****')
+            msg.exec_()
+
+        if orders_per_second_from_line_edit > 0:
+            orders_per_second = round(float(orders_per_second_from_line_edit), 2)
+
+        else:
+            orders_per_second = round(float(5), 2)
+            msg = QtWidgets.QMessageBox()
+            msg.setIcon(QtWidgets.QMessageBox.Information)
+            msg.setText('Order/Second must be > 0')
+            msg.setWindowTitle('***** ERROR *****')
+            msg.exec_()
+
+        if os.path.isfile('send_orders_rate.txt') is False:
+            with open('send_orders_rate.txt', 'a') as send_orders_rate_file:
+                send_orders_rate_file.write(str(orders_per_second))
+        else:
+            with open('send_orders_rate.txt', 'w') as send_orders_rate_file:
+                send_orders_rate_file.write(str(orders_per_second))
+
+        with open('send_orders_rate.txt', 'r') as send_orders_rate_file:
+            send_orders_rate_file_read = str(send_orders_rate_file.read())
+
+        ui.lineEdit_orders_rate.setText(str(send_orders_rate_file_read))
+        connect.logwriter('*** Order/Second Setup: ' + str(send_orders_rate_file_read) + ' ***')
+
     def set_version_and_icon():
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "VavaBot - Delta Hedge 2.2"))
@@ -937,6 +1082,8 @@ def config(ui):
     config_saved_print()
     ui.pushButton_submit_new_instruments.clicked.connect(instruments_save)
     ui.pushButton_submit_new_instruments_2.clicked.connect(config_save)
+    ConfigAndInstrumentsSaved().orders_rate_saved2()
+    ui.pushButton_orders_rate.clicked.connect(save_orders_rate)
 
 
 # noinspection PyShadowingNames
