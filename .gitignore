@@ -2,3 +2,4 @@ log_hedge.log
 api-key_hedge.txt
 secret-key_hedge.txt
 pyinstaller.py
+send_orders_rate.txt
