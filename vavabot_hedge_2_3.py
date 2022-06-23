@@ -271,6 +271,7 @@ class Deribit:
             if 'error' in str(out):
                 self.logwriter(str(out) + ' ID: ' + str(msg['id']))
                 list_monitor_log.append(str(out) + ' ID: ' + str(msg['id']))
+                time.sleep(1)
                 return out['error']
 
             elif str(msg['method']) == 'public/set_heartbeat':
