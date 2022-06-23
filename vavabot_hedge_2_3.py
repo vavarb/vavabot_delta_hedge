@@ -1602,8 +1602,6 @@ def run_hedge(ui):
                 from connection_hedge import connect
                 connect.logwriter('********** ERROR: BTC index print while started hedge **********'
                                   + str(error1))
-                list_monitor_log.append('********** ERROR: BTC index print while started hedge **********'
-                                        + str(error1))
                 time.sleep(10)
                 pass
             finally:
