@@ -608,11 +608,9 @@ class ConfigAndInstrumentsSaved:
                 list_instrument_name.append(i['instrument_name'])
             if instrument_name in list_instrument_name:
                 list_instrument_name.clear()
-                # time.sleep(0.3)
                 return 'instrument available'
             else:
                 list_instrument_name.clear()
-                # time.sleep(0.3)
                 return 'instrument NO available'
         except Exception as er:
             sinal.textedit_instruments_saved_signal.emit('*** ERROR - Instrument NO Checked ***')
@@ -1572,7 +1570,7 @@ def run_hedge(ui):
                     from connection_hedge import connect
                     connect.logwriter('********** ERROR: BTC index print **********' + str(error1))
                     list_monitor_log.append('********** ERROR: BTC index print **********' + str(error1))
-                    time.sleep(50)
+                    time.sleep(10)
                     pass
                 finally:
                     pass
@@ -1748,7 +1746,6 @@ def run_hedge(ui):
 
                     if float(hedge_superior_limit) >= float(hedge_greeks_value) >= float(hedge_inferior_limit):
                         list_monitor_log.append('*** Values according to defined parameters ***')
-                        time.sleep(2)
 
                     elif float(hedge_greeks_value) > float(hedge_superior_limit):
                         amount_in_btc = abs(float(hedge_greeks_value) - float(hedge_target))
@@ -1770,6 +1767,7 @@ def run_hedge(ui):
                         list_monitor_log.append('Amount:' + str(amount_hedge))
                         time.sleep(5)
                         connect.cancel_all()
+                        time.sleep(2)
 
                     elif float(hedge_greeks_value) < float(hedge_inferior_limit):
                         amount_in_btc = abs(float(hedge_target) - float(hedge_greeks_value))
@@ -1791,18 +1789,19 @@ def run_hedge(ui):
                         list_monitor_log.append('Amount:' + str(amount_hedge))
                         time.sleep(5)
                         connect.cancel_all()
+                        time.sleep(2)
 
                     else:
                         from connection_hedge import connect
                         connect.logwriter('********** ERROR while running hedge - line 1553 **********')
                         list_monitor_log.append('********** ERROR while running hedge - line 1554 **********')
-                        time.sleep(20)
+                        time.sleep(10)
 
                 except Exception as error1:
                     from connection_hedge import connect
                     connect.logwriter('********** ERROR while running hedge **********' + str(error1))
                     list_monitor_log.append('********** ERROR while running hedge **********' + str(error1))
-                    time.sleep(50)
+                    time.sleep(10)
                 finally:
                     pass
             list_monitor_log.append('***** Hedge Stopped *****')
