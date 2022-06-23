@@ -1408,6 +1408,9 @@ def run_hedge(ui):
 
                 connect.logwriter('***** Hedge_Stopped *****')
 
+                ui.lineEdit_orders_rate.setEnabled(False)
+                ui.pushButton_orders_rate.setEnabled(False)
+
             elif object_signal == 'led_connection':
                 led_color1 = str(info['led_color'])
                 if led_color1 == 'green':
@@ -1441,6 +1444,8 @@ def run_hedge(ui):
                 ui.pushButton_stop_arbitrage.setEnabled(True)
                 ui.pushButton_start_trading.setEnabled(False)
                 ui.pushButton.setText('Hedge\nStarted')
+                ui.lineEdit_orders_rate.setEnabled(False)
+                ui.pushButton_orders_rate.setEnabled(False)
 
             elif object_signal == 'Hedge_Started_icon':
                 green_icon = "./green_led_icon.png"
