@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+
+# Author: vavarb@protonmail.com
+
 from gui_hedge import *
 from connection_hedge import *
 from websocket import create_connection
@@ -6,6 +10,7 @@ import json
 import hmac
 import hashlib
 import time
+
 global index_greeks_print_on_off
 global strategy_on_off
 global list_monitor_log
