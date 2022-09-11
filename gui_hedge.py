@@ -760,26 +760,61 @@ class Ui_MainWindow(object):
         self.checkBox_autoScrollBar.raise_()
         self.gridLayout_4.addWidget(self.frame_3_run_trade, 0, 0, 1, 1)
         self.tabWidget.addTab(self.tab_run_trading, "")
-        self.tab_contact_us = QtWidgets.QWidget()
-        self.tab_contact_us.setObjectName("tab_contact_us")
-        self.frame_2_credentials_2 = QtWidgets.QFrame(self.tab_contact_us)
-        self.frame_2_credentials_2.setGeometry(QtCore.QRect(10, 0, 666, 371))
-        self.frame_2_credentials_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame_2_credentials_2.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame_2_credentials_2.setObjectName("frame_2_credentials_2")
-        self.label_12 = QtWidgets.QLabel(self.frame_2_credentials_2)
-        self.label_12.setGeometry(QtCore.QRect(30, 100, 381, 41))
+
+        # Tab About 1 - start
+        self.tab_about = QtWidgets.QWidget()
+        self.tab_about.setObjectName("tab_about")
+        self.frame_5_about = QtWidgets.QFrame(self.tab_about)
+        self.frame_5_about.setGeometry(QtCore.QRect(10, 0, 666, 371))
+        self.frame_5_about.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame_5_about.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame_5_about.setObjectName("frame_5_about")
+
+        self.textEdit_license = QtWidgets.QTextEdit(self.frame_5_about)
+        self.textEdit_license.setGeometry(QtCore.QRect(68, 196, 531, 175))
+        self.textEdit_license.setStyleSheet("background-color: rgb(255, 255, 255);\n"
+                                            "")
+        self.textEdit_license.setUndoRedoEnabled(True)
+        self.textEdit_license.setReadOnly(True)
+        self.textEdit_license.setObjectName("textEdit_license")
+
+        self.label_license = QtWidgets.QLabel(self.frame_5_about)
+        self.label_license.setGeometry(QtCore.QRect(68, 164, 531, 31))
         font = QtGui.QFont()
-        font.setPointSize(15)
-        font.setBold(False)
-        font.setWeight(50)
-        font.setStrikeOut(False)
-        self.label_12.setFont(font)
-        self.label_12.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.label_12.setObjectName("label_12")
-        self.tabWidget.addTab(self.tab_contact_us, "")
+        font.setPointSize(12)
+        font.setBold(True)
+        font.setWeight(75)
+        self.label_license.setFont(font)
+        self.label_license.setAlignment(QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+        self.label_license.setObjectName("label_license")
+        self.label_license.raise_()
+
+        self.textEdit_contact_us = QtWidgets.QTextEdit(self.frame_5_about)
+        self.textEdit_contact_us.setGeometry(QtCore.QRect(68, 5, 531, 56))
+        self.textEdit_contact_us.setUndoRedoEnabled(True)
+        self.textEdit_contact_us.setReadOnly(True)
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        font.setBold(True)
+        self.textEdit_contact_us.setFont(font)
+        self.textEdit_contact_us.setObjectName("textEdit_contact_us")
+
+        self.textEdit_buy_me_a_coffee = QtWidgets.QTextEdit(self.frame_5_about)
+        self.textEdit_buy_me_a_coffee.setGeometry(QtCore.QRect(68, 62, 531, 112))
+        self.textEdit_buy_me_a_coffee.setUndoRedoEnabled(True)
+        self.textEdit_buy_me_a_coffee.setReadOnly(True)
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        font.setBold(True)
+        self.textEdit_buy_me_a_coffee.setFont(font)
+        self.textEdit_buy_me_a_coffee.setObjectName("textEdit_buy_me_a_coffee")
+
+        self.tabWidget.addTab(self.tab_about, "")
+        # Tab About 1 - the end
+
         self.gridLayout_2.addWidget(self.tabWidget, 0, 0, 1, 1)
         self.gridLayout.addWidget(self.frame, 0, 0, 1, 1)
+
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -812,8 +847,7 @@ class Ui_MainWindow(object):
         MainWindow.setTabOrder(self.pushButton_stop_arbitrage, self.checkBox_autoScrollBar)
         MainWindow.setTabOrder(self.checkBox_autoScrollBar, self.pushButton)
         MainWindow.setTabOrder(self.pushButton, self.pushButton_2)
-        MainWindow.setTabOrder(self.pushButton_2, self.label_12)
-        MainWindow.setTabOrder(self.label_12, self.tabWidget)
+        MainWindow.setTabOrder(self.pushButton_2, self.tabWidget)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -890,8 +924,11 @@ class Ui_MainWindow(object):
         self.pushButton_2.setText(_translate("MainWindow", "clear"))
         self.checkBox_autoScrollBar.setText(_translate("MainWindow", "Auto Scroll Bar"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_run_trading), _translate("MainWindow", "Run Hedge"))
-        self.label_12.setText(_translate("MainWindow", "email: vavarb@protonmail.com"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_contact_us), _translate("MainWindow", "Contact"))
+
+        # tab_about 2 start
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_about), _translate("MainWindow", "About"))
+        self.label_license.setText(_translate("MainWindow", "License"))
+        # tab_about 2 the end
 
 
 if __name__ == "__main__":

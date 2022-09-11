@@ -878,7 +878,7 @@ def config(ui):
 
     def set_version_and_icon():
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "VavaBot - Delta Hedge 2.3"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "VavaBot - Delta Hedge 3.0"))
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(".../icon_noctuline_wall_e_eve_hedge.ico"),
@@ -886,6 +886,31 @@ def config(ui):
 
         ui.pushButton_submit_new_instruments_2.setText(_translate("MainWindow", "UPDATE Setup"))
         ui.label_10.setText(_translate("MainWindow", "Setup:"))
+
+        # Set text License
+        try:
+            with open('LICENSE.txt', 'r') as license_txt_file:
+                license_txt = license_txt_file.read()
+                ui.textEdit_license.append(license_txt)
+        except FileNotFoundError:
+            license_txt = 'License file NOT found\n\nCopyright 2022 Vavarb vavarb@protonmail.com ' \
+                          'https://github.com/vavarb\n\nVisit: http://www.apache.org/licenses/LICENSE-2.0'
+            ui.textEdit_license.append(license_txt)
+        finally:
+            pass
+
+        # Set text Contact us
+        contact_text = 'Contact us: vavarb@protonmail.com\n' \
+                       'Source Code: https://github.com/vavarb/vavabot_options_strategy'
+        ui.textEdit_contact_us.append(contact_text)
+
+        # Set text Buy me a coffee
+        buy_me_a_coffee_text = 'Buy me a Coffe ☕? If you have found anything useful and you want to support me, ' \
+                               'feel free to do it with ₿ITCOIN or Lightning Network! And many thanks in advance. ' \
+                               '😁\n\n' \
+                               '>>> Lightning Network Adress: vavarb@bipa.app\n' \
+                               '>>> ₿ITCOIN Adress: 36RbpSZVNiSxK69kNMH3WHFJqAhfXppU5N'
+        ui.textEdit_buy_me_a_coffee.append(buy_me_a_coffee_text)
 
     def set_date():
         date_now_instrument = QtCore.QDate.currentDate()
