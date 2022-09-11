@@ -651,6 +651,41 @@ class ConfigAndInstrumentsSaved:
             inferior_limit = str(list_lines_a_file[2])
             return float(inferior_limit)
 
+    @staticmethod
+    def remove_log_hedge_log_if_bigger_500kb_when_open_app():
+        import os
+        from lists import list_monitor_log
+
+        try:
+            if os.path.isfile('log_hedge_backup.log') is True:
+                if float(os.path.getsize('log_hedge_backup.log')) > 8000000:
+                    os.unlink('log_hedge_backup.log')
+                    list_monitor_log.append('*** Deleted log_hedge_backup.log (>8MB). ***')
+                else:
+                    list_monitor_log.append('*** Len log_hedge_backup.log < 8MB. ***')
+            else:
+                pass
+
+            if os.path.isfile('log_hedge.log') is True:
+                if float(os.path.getsize('log_hedge.log')) > 500000:
+                    with open('log_hedge_backup.log', 'a') as file_backup:
+                        with open('log_hedge.log', 'r') as log_file:
+                            file_backup.writelines(log_file)
+                            list_monitor_log.append('*** Appended log_hedge.log into log_hedge_backup.log ***')
+                    os.unlink('log_hedge.log')
+                    list_monitor_log.append('*** Deleted and Created log_hedge.log ***')
+                else:
+                    list_monitor_log.append('*** Len log_hedge.log < 0.5MB. ***')
+            else:
+                list_monitor_log.append('*** Created log_hedge.log ***')
+
+        except Exception as er:
+            from connection_hedge import connect
+            list_monitor_log.append('***** ERROR in remove_log_hedge_log_if_bigger_500kb_when_open_app(): ' +
+                                    str(er) + '. Error Code 758 *****')
+            connect.logwriter('***** ERROR in remove_llog_hedge_log_if_bigger_500kb_when_open_app(): ' +
+                              str(er) + '. Error Code 760 *****')
+
 
 # noinspection PyShadowingNames
 def credentials(ui):
@@ -916,40 +951,6 @@ def config(ui):
         date_now_instrument = QtCore.QDate.currentDate()
         ui.lineEdit_maturity_instrumet1.setDate(date_now_instrument.addDays(-1))
 
-    def remove_log_hedge_log_if_bigger_500kb_when_open_app():
-        import os
-        from lists import list_monitor_log
-
-        try:
-            if os.path.isfile('log_hedge_backup.log') is True:
-                if float(os.path.getsize('log_hedge_backup.log')) > 8000000:
-                    os.unlink('log_hedge_backup.log')
-                    list_monitor_log.append('*** Deleted log_hedge_backup.log (>8MB). ***')
-                else:
-                    list_monitor_log.append('*** Len log_hedge_backup.log < 8MB. ***')
-            else:
-                pass
-
-            if os.path.isfile('log_hedge.log') is True:
-                if float(os.path.getsize('log_hedge.log')) > 500000:
-                    with open('log_hedge_backup.log', 'a') as file_backup:
-                        with open('log_hedge.log', 'r') as log_file:
-                            file_backup.writelines(log_file)
-                            list_monitor_log.append('*** Appended log_hedge.log into log_hedge_backup.log ***')
-                    os.unlink('log_hedge.log')
-                    list_monitor_log.append('*** Deleted and Created log_hedge.log ***')
-                else:
-                    list_monitor_log.append('*** Len log_hedge.log < 0.5MB. ***')
-            else:
-                list_monitor_log.append('*** Created log_hedge.log ***')
-
-        except Exception as er:
-            from connection_hedge import connect
-            list_monitor_log.append('***** ERROR in remove_log_hedge_log_if_bigger_500kb_when_open_app(): ' +
-                                    str(er) + '. Error Code 758 *****')
-            connect.logwriter('***** ERROR in remove_llog_hedge_log_if_bigger_500kb_when_open_app(): ' +
-                              str(er) + '. Error Code 760 *****')
-
     def textedit_instruments_saved_signal(info):
         ui.textEdit_instruments_saved.setText(str(info))
 
@@ -1120,7 +1121,6 @@ def config(ui):
             config_save_file.close()
 
     set_version_and_icon()
-    remove_log_hedge_log_if_bigger_500kb_when_open_app()
     set_date()
     sinal.textedit_instruments_saved_signal.connect(textedit_instruments_saved_signal)
     sinal.ui_signal3.connect(ui_signal3)
