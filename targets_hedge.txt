@@ -1,4 +1,4 @@
 Delta TOTAL 
- Hedge Target: -0.247
- SUPERIOR Limit: 0.05299999999999999
- INFERIOR Limit: -0.5469999999999999
+ Hedge Target: 0
+ SUPERIOR Limit: 0.3
+ INFERIOR Limit: -0.3
