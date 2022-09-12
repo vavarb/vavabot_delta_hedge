@@ -795,6 +795,7 @@ class Ui_MainWindow(object):
         self.textEdit_license.setUndoRedoEnabled(True)
         self.textEdit_license.setReadOnly(True)
         self.textEdit_license.setObjectName("textEdit_license")
+        self.textEdit_license.setFocusPolicy(QtCore.Qt.NoFocus)
 
         self.label_license = QtWidgets.QLabel(self.frame_5_about)
         self.label_license.setGeometry(QtCore.QRect(68, 164, 526, 31))
@@ -874,11 +875,7 @@ class Ui_MainWindow(object):
         MainWindow.setTabOrder(self.pushButton_stop_arbitrage, self.checkBox_autoScrollBar)
         MainWindow.setTabOrder(self.checkBox_autoScrollBar, self.pushButton)
         MainWindow.setTabOrder(self.pushButton, self.pushButton_2)
-
-        MainWindow.setTabOrder(self.pushButton_2, self.radioButton_disagree)
-        MainWindow.setTabOrder(self.radioButton_disagree, self.radioButton_agree)
-
-        MainWindow.setTabOrder(self.radioButton_agree, self.tabWidget)
+        MainWindow.setTabOrder(self.pushButton_2, self.tabWidget)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
