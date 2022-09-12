@@ -1198,7 +1198,7 @@ def config(ui):
         MainWindow.setWindowTitle(_translate("MainWindow", "VavaBot - Delta Hedge 3.0"))
 
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(".../icon_noctuline_wall_e_eve_hedge.ico"),
+        icon.addPixmap(QtGui.QPixmap(".../icon_noctuline_wall_e_eve.ico"),
                        QtGui.QIcon.Normal, QtGui.QIcon.Off)
 
         ui.pushButton_submit_new_instruments_2.setText(_translate("MainWindow", "UPDATE Setup"))
