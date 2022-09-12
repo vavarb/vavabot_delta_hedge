@@ -1,3 +1,4 @@
+from PyQt5.QtWidgets import QInputDialog, QLineEdit
 from gui_hedge import *
 from connection_hedge import *
 from websocket import create_connection
@@ -15,6 +16,7 @@ global connect
 global counter_send_order
 global sender_rate_dict
 global delay_delay
+global password_dict
 
 
 # Classe de Sinais.
@@ -38,34 +40,98 @@ class CredentialsSaved:
 
     @staticmethod
     def api_secret_saved():
-        from lists import list_monitor_log
         import os
+        import base64
+        from cryptography.fernet import Fernet, InvalidToken, InvalidSignature
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+        from lists import password_dict
+        global password_dict
+
+        password1 = str(password_dict['pwd'])
 
         if os.path.isfile('api-key_hedge.txt') is False:
             with open('api-key_hedge.txt', 'a') as api_key_save_file:
                 api_key_save_file.write(str('<Type your Deribit Key>'))
+            api_secret_saved_file_read = str('<Type your Deribit Key>')
         else:
-            pass
+            with open('api-key_hedge.txt', 'r') as file:
+                if '<Type your Deribit Key>' in str(file.read()):
+                    file_read = str('<Type your Deribit Key>')
+                else:
+                    file_read = 'True'
+            if file_read == 'True':
+                salt = b'\x90"\x90J\r\xa6\x08\xb6_\xbdfEd\x1cDE'
+                kdf = PBKDF2HMAC(
+                    algorithm=hashes.SHA256(),
+                    length=32,
+                    salt=salt,
+                    iterations=390000,
+                )
 
-        with open('api-key_hedge.txt', 'r') as api_secret_saved_file:
-            api_secret_saved_file_read = str(api_secret_saved_file.read())
-        list_monitor_log.append('*** API key: ' + str(api_secret_saved_file_read) + ' ***')
+                key = base64.urlsafe_b64encode(kdf.derive(str(password1).encode('utf-8')))
+                f = Fernet(key)
+
+                with open('api-key_hedge.txt', 'rb') as enc_file:
+                    encrypted = enc_file.read()
+                try:
+                    decrypted = f.decrypt(encrypted).decode('utf-8')
+                    api_secret_saved_file_read = str(decrypted)
+                except InvalidToken or InvalidSignature:
+                    api_secret_saved_file_read = str('<Type your Deribit Key>')
+                finally:
+                    pass
+            else:
+                api_secret_saved_file_read = str('<Type your Deribit Key>')
+
         return api_secret_saved_file_read
 
     @staticmethod
     def secret_key_saved():
-        from lists import list_monitor_log
         import os
+        import base64
+        from cryptography.fernet import Fernet, InvalidToken, InvalidSignature
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+        from lists import password_dict
+        global password_dict
+
+        password2 = str(password_dict['pwd'])
 
         if os.path.isfile('secret-key_hedge.txt') is False:
-            with open('secret-key_hedge.txt', 'a') as api_key_save_file:
-                api_key_save_file.write(str('<Type your Deribit Secret Key>'))
+            with open('secret-key_hedge.txt', 'a') as secret_key_saved_file:
+                secret_key_saved_file.write(str('<Type your Deribit Secret Key>'))
+            secret_key_saved_file_read = str('<Type your Deribit Secret Key>')
         else:
-            pass
+            with open('secret-key_hedge.txt', 'r') as file:
+                if '<Type your Deribit Secret Key>' in str(file.read()):
+                    file_read = str('<Type your Deribit Secret Key>')
+                else:
+                    file_read = 'True'
+            if file_read == 'True':
+                salt = b'\x90"\x90J\r\xa6\x08\xb6_\xbdfEd\x1cDE'
+                kdf = PBKDF2HMAC(
+                    algorithm=hashes.SHA256(),
+                    length=32,
+                    salt=salt,
+                    iterations=390000,
+                )
 
-        with open('secret-key_hedge.txt', 'r') as secret_key_saved_file:
-            secret_key_saved_file_read = str(secret_key_saved_file.read())
-        list_monitor_log.append('*** SECRET key: ' + str(secret_key_saved_file_read) + ' ***')
+                key = base64.urlsafe_b64encode(kdf.derive(str(password2).encode('utf-8')))
+                f = Fernet(key)
+
+                with open('secret-key_hedge.txt', 'rb') as enc_file:
+                    encrypted = enc_file.read()
+                try:
+                    decrypted = f.decrypt(encrypted).decode('utf-8')
+                    secret_key_saved_file_read = str(decrypted)
+                except InvalidToken or InvalidSignature:
+                    secret_key_saved_file_read = str('<Type your Deribit Secret Key>')
+                finally:
+                    pass
+            else:
+                secret_key_saved_file_read = str('<Type your Deribit Secret Key>')
+
         return secret_key_saved_file_read
 
     @staticmethod
@@ -816,10 +882,48 @@ def credentials(ui):
                     pass  # cancel clicked
 
     def api_key_saved_print():
-        ui.lineEdit_api_key_saved.setText(CredentialsSaved.api_secret_saved())
+        text = str(CredentialsSaved.api_secret_saved())
+
+        if text == '<Type your Deribit Key>':
+            ui.lineEdit_api_key_saved.setText(text)
+        else:
+            text1 = text[:3]
+            list_text1 = list(text1)
+            if len(text) >= 4:
+                text2 = text[3:]
+                list_text2 = list(text2)
+                for i in list_text2:
+                    list_text2[list_text2.index(i)] = '*'
+                list_text1.extend(list_text2)
+                text3 = "".join(list_text1)
+                ui.lineEdit_api_key_saved.setText(text3)
+            else:
+                for i in list_text1:
+                    list_text1[list_text1.index(i)] = '*'
+                text3 = "".join(list_text1)
+                ui.lineEdit_api_key_saved.setText(text3)
 
     def secret_key_saved_print():
-        ui.lineEdit_api_secret_saved.setText(CredentialsSaved.secret_key_saved())
+        text = str(CredentialsSaved.secret_key_saved())
+
+        if text == '<Type your Deribit Secret Key>':
+            ui.lineEdit_api_secret_saved.setText(text)
+        else:
+            text1 = text[:3]
+            list_text1 = list(text1)
+            if len(text) >= 4:
+                text2 = text[3:]
+                list_text2 = list(text2)
+                for i in list_text2:
+                    list_text2[list_text2.index(i)] = '*'
+                list_text1.extend(list_text2)
+                text3 = "".join(list_text1)
+                ui.lineEdit_api_secret_saved.setText(text3)
+            else:
+                for i in list_text1:
+                    list_text1[list_text1.index(i)] = '*'
+                text3 = "".join(list_text1)
+                ui.lineEdit_api_secret_saved.setText(text3)
 
     def testnet_true_or_false_saved_print():
         testnet_true_or_false_saved_print_file = CredentialsSaved.testnet_saved_tru_or_false()
@@ -843,14 +947,60 @@ def credentials(ui):
             pass
 
     def api_key_save():
-        with open('api-key_hedge.txt', 'w') as api_key_save_file:
-            api_key_save_file.write(str(ui.lineEdit_api_key_new.text()))
+        import base64
+        from cryptography.fernet import Fernet
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+        from lists import password_dict
+        global password_dict
+
+        password3 = str(password_dict['pwd'])
+
+        salt = b'\x90"\x90J\r\xa6\x08\xb6_\xbdfEd\x1cDE'
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt,
+            iterations=390000,
+        )
+
+        key = base64.urlsafe_b64encode(kdf.derive(str(password3).encode('utf-8')))
+        f = Fernet(key)
+        original = str(ui.lineEdit_api_key_new.text()).encode('utf-8')
+        token = f.encrypt(original)
+
+        with open('api-key_hedge.txt', 'wb') as encrypted_file:
+            encrypted_file.write(token)
+
         secret_key_save()
         api_key_saved_print()
 
     def secret_key_save():
-        with open('secret-key_hedge.txt', 'w') as secret_key_save_file:
-            secret_key_save_file.write(str(ui.lineEdit_api_secret_new.text()))
+        import base64
+        from cryptography.fernet import Fernet
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+        from lists import password_dict
+        global password_dict
+
+        password4 = str(password_dict['pwd'])
+
+        salt = b'\x90"\x90J\r\xa6\x08\xb6_\xbdfEd\x1cDE'
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt,
+            iterations=390000,
+        )
+
+        key = base64.urlsafe_b64encode(kdf.derive(str(password4).encode('utf-8')))
+        f = Fernet(key)
+        original = str(ui.lineEdit_api_secret_new.text()).encode('utf-8')
+        token = f.encrypt(original)
+
+        with open('secret-key_hedge.txt', 'wb') as encrypted_file:
+            encrypted_file.write(token)
+
         secret_key_saved_print()
 
     def testnet_true_save():
@@ -863,9 +1013,141 @@ def credentials(ui):
             testnet_false_save_file.write('False')
         testnet_true_or_false_saved_print()
 
-    api_key_saved_print()
-    secret_key_saved_print()
-    testnet_true_or_false_saved_print()
+    def need_password_counter_smaller_three():
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(QtWidgets.QMessageBox.Information)
+        msg.setText('You need to create a password\nto recover API credentials')
+        msg.setWindowTitle('WARNING')
+        msg.exec_()
+        pass
+        time.sleep(0.5)
+
+    def invalid_password():
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(QtWidgets.QMessageBox.Information)
+        msg.setText('Invalid Password')
+        msg.setWindowTitle('INFO')
+        msg.exec_()
+        pass
+        time.sleep(0.5)
+
+    def invalid_password_counter_bigger_three():
+        import os
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(QtWidgets.QMessageBox.Information)
+        msg.setText('Credentials will be reset\nAnd APP will be close')
+        msg.setWindowTitle('INFO')
+        msg.exec_()
+        pass
+        os.unlink('api-key_hedge.txt')
+        os.unlink('secret-key_hedge.txt')
+        time.sleep(1)
+        sys.exit()
+
+    def message_connection_only_public():
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(QtWidgets.QMessageBox.Information)
+        msg.setText('Only public methods\nwill be executed')
+        msg.setWindowTitle('INFO')
+        msg.exec_()
+        pass
+
+    def message_box_password_input():
+        from connection_hedge import connection1, connection_thread
+        import os
+        from lists import password_dict
+        global password_dict
+
+        if os.path.isfile('secret-key_hedge.txt') is True:
+            with open('secret-key_hedge.txt', 'r') as file1:
+                sks = file1.read()
+        else:
+            sks = '<Type your Deribit Secret Key>'
+
+        if os.path.isfile('api-key_hedge.txt') is True:
+            with open('api-key_hedge.txt', 'r') as file2:
+                a_s_saved = file2.read()
+        else:
+            a_s_saved = '<Type your Deribit Key>'
+
+        if '<Type your Deribit Key>' in str(a_s_saved) or '<Type your Deribit Secret Key>' in str(sks):
+            connection1()
+            connection_thread()
+            api_key_saved_print()
+            secret_key_saved_print()
+            testnet_true_or_false_saved_print()
+        else:
+            password_input = 'User'
+            invalid_password_counter = 0
+            need_password_counter = 0
+
+            while password_input == 'User':
+                le = QLineEdit()
+                le.setText('Password')
+
+                text, ok = QInputDialog().getText(le, "WARNING",
+                                                  "Password to recovey API Credentials:", le.Password)
+                # QDir().home().dirName())
+                if ok is False:
+                    password_input = str(password_dict['pwd'])
+                    message_connection_only_public()
+                    connection1()
+                    connection_thread()
+                    api_key_saved_print()
+                    secret_key_saved_print()
+                    testnet_true_or_false_saved_print()
+                if ok:
+                    le.setText(str(text))
+                    if str(text) == '':
+                        if need_password_counter <= 3:
+                            need_password_counter = need_password_counter + 1
+                            need_password_counter_smaller_three()
+                        else:
+                            invalid_password_counter_bigger_three()
+                    else:
+                        import base64
+                        from cryptography.fernet import Fernet, InvalidToken, InvalidSignature
+                        from cryptography.hazmat.primitives import hashes
+                        from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+                        password_dict['pwd'] = str(text)
+
+                        salt = b'\x90"\x90J\r\xa6\x08\xb6_\xbdfEd\x1cDE'
+                        kdf = PBKDF2HMAC(
+                            algorithm=hashes.SHA256(),
+                            length=32,
+                            salt=salt,
+                            iterations=390000,
+                        )
+
+                        key = base64.urlsafe_b64encode(kdf.derive(str(password_dict['pwd']).encode('utf-8')))
+                        f = Fernet(key)
+
+                        with open('api-key_hedge.txt', 'rb') as enc_file:
+                            encrypted1 = enc_file.read()
+                        with open('secret-key_hedge.txt', 'rb') as enc_file:
+                            encrypted2 = enc_file.read()
+
+                        if invalid_password_counter <= 3:
+                            try:
+                                f.decrypt(encrypted1).decode('utf-8')
+                                f.decrypt(encrypted2).decode('utf-8')
+                            except InvalidToken or InvalidSignature:
+                                invalid_password_counter = invalid_password_counter + 1
+                                invalid_password()
+                            else:
+                                password_input = str(password_dict['pwd'])
+                                connection1()
+                                connection_thread()
+                                api_key_saved_print()
+                                secret_key_saved_print()
+                                testnet_true_or_false_saved_print()
+                            finally:
+                                pass
+                        else:
+                            invalid_password_counter_bigger_three()
+
+    message_box_password_input()
     ui.pushButton_submit_new_credintals.clicked.connect(message_box_reboot1)
     ui.radioButton_testnet_true.clicked.connect(message_box_reboot2)
     ui.radioButton_2_testnet_false.clicked.connect(message_box_reboot3)
@@ -1853,6 +2135,45 @@ def run_hedge(ui):
     ui.checkBox_autoScrollBar.clicked.connect(autoscroll_monitor)
 
 
+# noinspection PyShadowingNam
+def about(ui):
+    def disagree_license_when_open_app():
+        ui.tab_credentials.setDisabled(True)
+        ui.tab_instruments.setDisabled(True)
+        ui.tab_targets.setDisabled(True)
+        ui.tab_run_trading.setDisabled(True)
+
+    def disagree_license():
+        from connection_hedge import connect
+
+        ui.tab_credentials.setDisabled(True)
+        ui.tab_instruments.setDisabled(True)
+        ui.tab_targets.setDisabled(True)
+        ui.tab_run_trading.setDisabled(True)
+
+        connect.logwriter('License: I Disagreed')
+
+        ui.radioButton_agree.setEnabled(False)
+        ui.radioButton_disagree.setEnabled(False)
+
+    def agree_license():
+        from connection_hedge import connect
+
+        ui.tab_credentials.setDisabled(False)
+        ui.tab_instruments.setDisabled(False)
+        ui.tab_targets.setDisabled(False)
+        ui.tab_run_trading.setDisabled(False)
+
+        connect.logwriter('License: I Disagreed')
+
+        ui.radioButton_agree.setEnabled(False)
+        ui.radioButton_disagree.setEnabled(False)
+
+    disagree_license_when_open_app()
+    ui.radioButton_agree.clicked.connect(agree_license)
+    ui.radioButton_disagree.clicked.connect(disagree_license)
+
+
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
@@ -1864,4 +2185,5 @@ if __name__ == "__main__":
     config(ui=ui)
     summary(ui=ui)
     run_hedge(ui=ui)
+    about(ui=ui)
     sys.exit(app.exec_())

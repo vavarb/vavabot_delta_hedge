@@ -59,6 +59,7 @@ class Ui_MainWindow(object):
         self.label.setObjectName("label")
         self.lineEdit_api_key_new = QtWidgets.QLineEdit(self.frame_2_credentials)
         self.lineEdit_api_key_new.setGeometry(QtCore.QRect(10, 100, 171, 31))
+        self.lineEdit_api_key_new.setEchoMode(QtWidgets.QLineEdit.PasswordEchoOnEdit)
         self.lineEdit_api_key_new.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.lineEdit_api_key_new.setObjectName("lineEdit_api_key_new")
         self.label_2 = QtWidgets.QLabel(self.frame_2_credentials)
@@ -85,6 +86,7 @@ class Ui_MainWindow(object):
         self.lineEdit_api_secret_saved.setObjectName("lineEdit_api_secret_saved")
         self.lineEdit_api_secret_new = QtWidgets.QLineEdit(self.frame_2_credentials)
         self.lineEdit_api_secret_new.setGeometry(QtCore.QRect(260, 100, 391, 31))
+        self.lineEdit_api_secret_new.setEchoMode(QtWidgets.QLineEdit.PasswordEchoOnEdit)
         self.lineEdit_api_secret_new.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.lineEdit_api_secret_new.setClearButtonEnabled(False)
         self.lineEdit_api_secret_new.setObjectName("lineEdit_api_secret_new")
@@ -104,6 +106,22 @@ class Ui_MainWindow(object):
         self.label_5.setObjectName("label_5")
         self.pushButton_submit_new_credintals = QtWidgets.QPushButton(self.frame_2_credentials)
         self.pushButton_submit_new_credintals.setGeometry(QtCore.QRect(430, 150, 231, 61))
+
+        # password line edit and label created
+        self.label_password = QtWidgets.QLabel(self.frame_2_credentials)
+        self.label_password.setGeometry(QtCore.QRect(30, 145, 315, 31))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.label_password.setFont(font)
+        self.label_password.setObjectName("label_password")
+        self.lineEdit_password = QtWidgets.QLineEdit(self.frame_2_credentials)
+        self.lineEdit_password.setGeometry(QtCore.QRect(10, 173, 350, 31))
+        self.lineEdit_password.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.lineEdit_password.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.lineEdit_password.setClearButtonEnabled(False)
+        self.lineEdit_password.setObjectName("lineEdit_password")
+        # password line edit an label created - the end
+
         font = QtGui.QFont()
         font.setFamily("MS Shell Dlg 2")
         font.setPointSize(12)
@@ -771,7 +789,7 @@ class Ui_MainWindow(object):
         self.frame_5_about.setObjectName("frame_5_about")
 
         self.textEdit_license = QtWidgets.QTextEdit(self.frame_5_about)
-        self.textEdit_license.setGeometry(QtCore.QRect(68, 196, 531, 175))
+        self.textEdit_license.setGeometry(QtCore.QRect(68, 196, 526, 175))
         self.textEdit_license.setStyleSheet("background-color: rgb(255, 255, 255);\n"
                                             "")
         self.textEdit_license.setUndoRedoEnabled(True)
@@ -779,7 +797,7 @@ class Ui_MainWindow(object):
         self.textEdit_license.setObjectName("textEdit_license")
 
         self.label_license = QtWidgets.QLabel(self.frame_5_about)
-        self.label_license.setGeometry(QtCore.QRect(68, 164, 531, 31))
+        self.label_license.setGeometry(QtCore.QRect(68, 164, 526, 31))
         font = QtGui.QFont()
         font.setPointSize(12)
         font.setBold(True)
@@ -790,7 +808,7 @@ class Ui_MainWindow(object):
         self.label_license.raise_()
 
         self.textEdit_contact_us = QtWidgets.QTextEdit(self.frame_5_about)
-        self.textEdit_contact_us.setGeometry(QtCore.QRect(68, 5, 531, 56))
+        self.textEdit_contact_us.setGeometry(QtCore.QRect(68, 5, 526, 56))
         self.textEdit_contact_us.setUndoRedoEnabled(True)
         self.textEdit_contact_us.setReadOnly(True)
         font = QtGui.QFont()
@@ -800,7 +818,7 @@ class Ui_MainWindow(object):
         self.textEdit_contact_us.setObjectName("textEdit_contact_us")
 
         self.textEdit_buy_me_a_coffee = QtWidgets.QTextEdit(self.frame_5_about)
-        self.textEdit_buy_me_a_coffee.setGeometry(QtCore.QRect(68, 62, 531, 112))
+        self.textEdit_buy_me_a_coffee.setGeometry(QtCore.QRect(68, 62, 526, 112))
         self.textEdit_buy_me_a_coffee.setUndoRedoEnabled(True)
         self.textEdit_buy_me_a_coffee.setReadOnly(True)
         font = QtGui.QFont()
@@ -808,6 +826,14 @@ class Ui_MainWindow(object):
         font.setBold(True)
         self.textEdit_buy_me_a_coffee.setFont(font)
         self.textEdit_buy_me_a_coffee.setObjectName("textEdit_buy_me_a_coffee")
+
+        self.radioButton_agree = QtWidgets.QRadioButton(self.frame_5_about)
+        self.radioButton_agree.setGeometry(QtCore.QRect(595, 320, 105, 14))
+        self.radioButton_agree.setObjectName("radioButton_agree")
+
+        self.radioButton_disagree = QtWidgets.QRadioButton(self.frame_5_about)
+        self.radioButton_disagree.setGeometry(QtCore.QRect(595, 300, 105, 14))
+        self.radioButton_disagree.setObjectName("radioButton_disagree")
 
         self.tabWidget.addTab(self.tab_about, "")
         # Tab About 1 - the end
@@ -825,7 +851,8 @@ class Ui_MainWindow(object):
         self.checkBox_perpetual_1.clicked['bool'].connect(self.lineEdit_maturity_instrumet1.setDisabled)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         MainWindow.setTabOrder(self.lineEdit_api_key_new, self.lineEdit_api_secret_new)
-        MainWindow.setTabOrder(self.lineEdit_api_secret_new, self.pushButton_submit_new_credintals)
+        MainWindow.setTabOrder(self.lineEdit_api_secret_new, self.lineEdit_password)
+        MainWindow.setTabOrder(self.lineEdit_password, self.pushButton_submit_new_credintals)
         MainWindow.setTabOrder(self.pushButton_submit_new_credintals, self.radioButton_testnet_true)
         MainWindow.setTabOrder(self.radioButton_testnet_true, self.radioButton_2_testnet_false)
         MainWindow.setTabOrder(self.radioButton_2_testnet_false, self.lineEdit_currency_instrumet1)
@@ -847,15 +874,22 @@ class Ui_MainWindow(object):
         MainWindow.setTabOrder(self.pushButton_stop_arbitrage, self.checkBox_autoScrollBar)
         MainWindow.setTabOrder(self.checkBox_autoScrollBar, self.pushButton)
         MainWindow.setTabOrder(self.pushButton, self.pushButton_2)
-        MainWindow.setTabOrder(self.pushButton_2, self.tabWidget)
+
+        MainWindow.setTabOrder(self.pushButton_2, self.radioButton_disagree)
+        MainWindow.setTabOrder(self.radioButton_disagree, self.radioButton_agree)
+
+        MainWindow.setTabOrder(self.radioButton_agree, self.tabWidget)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "VavaBot -Hedge beta 2.0"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "VavaBot - Delta Hedge"))
         self.label.setText(_translate("MainWindow", "API Key"))
         self.label_2.setText(_translate("MainWindow", "Salved"))
         self.label_3.setText(_translate("MainWindow", "Update"))
         self.label_4.setText(_translate("MainWindow", "API Secret"))
+
+        self.label_password.setText(_translate("MainWindow", "Type password to recover API credentials:"))
+
         self.radioButton_testnet_true.setText(_translate("MainWindow", "TEST ACCOUNT"))
         self.radioButton_2_testnet_false.setText(_translate("MainWindow", "REAL ACCOUNT"))
         self.label_5.setText(_translate("MainWindow", "Select acoount mode:"))
@@ -928,6 +962,8 @@ class Ui_MainWindow(object):
         # tab_about 2 start
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_about), _translate("MainWindow", "About"))
         self.label_license.setText(_translate("MainWindow", "License"))
+        self.radioButton_agree.setText(_translate("MainWindow", "I Agree"))
+        self.radioButton_disagree.setText(_translate("MainWindow", "I Disagree"))
         # tab_about 2 the end
 
 
