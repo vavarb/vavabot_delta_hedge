@@ -2260,7 +2260,7 @@ def about(ui):
         ui.tab_targets.setDisabled(True)
         ui.tab_run_trading.setDisabled(True)
 
-        connect.logwriter('License: I Disagreed')
+        connect.logwriter('License: I Disagree')
 
         ui.radioButton_agree.setEnabled(False)
         ui.radioButton_disagree.setEnabled(False)
@@ -2273,7 +2273,7 @@ def about(ui):
         ui.tab_targets.setDisabled(False)
         ui.tab_run_trading.setDisabled(False)
 
-        connect.logwriter('License: I Disagreed')
+        connect.logwriter('License: I Agree')
 
         ui.radioButton_agree.setEnabled(False)
         ui.radioButton_disagree.setEnabled(False)
