@@ -11,7 +11,7 @@ vavarb@yahoo.com
 ```
 
 ## About the Project
-This is a simple Delta Hedge bot. It was developed in python and designed to be executed only on the Deribit Exchange.
+This is a simple Dynamic Delta Hedge bot. It was developed in python and designed to be executed only on the Deribit Exchange.
   https://www.deribit.com/
 
 <img src = 'https://github.com/vavarb/vavabot_delta_hedge/blob/5de2234503e0426252f465d3018df1ad164e3954/img/img1.PNG'>
