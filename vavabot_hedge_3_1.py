@@ -15,8 +15,8 @@ global hedge_on_off
 global connect
 global counter_send_order
 global sender_rate_dict
-global delay_delay
 global password_dict
+global counter_send_order_for_function
 
 
 # Classe de Sinais.
@@ -26,12 +26,15 @@ class Sinais(QtCore.QObject):
     ui_signal1 = QtCore.pyqtSignal(dict)  # ['object_signal': , 'action_signal': , 'info': ]
     ui_signal2 = QtCore.pyqtSignal(str)
     ui_signal3 = QtCore.pyqtSignal(dict)
+    set_version_and_icon_signal = QtCore.pyqtSignal()
 
     def __init__(self):
         QtCore.QObject.__init__(self)
 
 
 sinal = Sinais()  # Instância da Classe Sinais.
+delay_delay = 0
+delay = 0
 
 
 class CredentialsSaved:
@@ -176,25 +179,25 @@ class Deribit:
     # noinspection PyMethodMayBeStatic
     def logwriter(self, msg):
         from lists import list_monitor_log
-        global counter_send_order
 
         filename = 'log_hedge.log'
-        counter_send_order = counter_send_order + 1
 
         try:
             out = datetime.now().strftime("\n[%Y/%m/%d, %H:%M:%S] ") + str(msg)
-            list_monitor_log.append(str(msg) + '_' + str(counter_send_order))
+            list_monitor_log.append(str(msg))
             with open(filename, 'a') as logwriter_file:
-                logwriter_file.write(str(out) + '_' + str(counter_send_order))
+                logwriter_file.write(str(out))
 
         except Exception as er:
             from connection_hedge import connect
             from lists import list_monitor_log
+            global counter_send_order_for_function
+
             with open(filename, 'a') as logwriter_file:
                 logwriter_file.write(str(datetime.now().strftime("\n[%Y/%m/%d, %H:%M:%S] ")) +
                                      '***** ERROR except in logwriter: ' +
                                      str(er) + str(msg) +
-                                     '_' + str(counter_send_order) + ' *****')
+                                     '_' + str(counter_send_order_for_function) + ' *****')
             list_monitor_log.append('***** ERROR except in logwriter: ' + str(er) + ' *****')
         finally:
             pass
@@ -205,17 +208,15 @@ class Deribit:
         self.client_secret = client_secret
 
         from lists import list_monitor_log
-        global counter_send_order
         global sender_rate_dict
         global delay_delay
+        global counter_send_order_for_function
 
-        delay_delay = 0
+        counter_send_order_for_function = 0
 
         sender_rate_dict = dict()
         sender_rate_dict['time_1'] = time.time()
         sender_rate_dict['counter_send_order_for_sender_rate'] = 1
-
-        counter_send_order = 0
 
         timestamp = round(datetime.now().timestamp() * 1000)
         nonce = "abcd"
@@ -227,7 +228,7 @@ class Deribit:
         ).hexdigest().lower()
 
         try:
-            self._WSS = create_connection(wss_url)
+            self._WSS = create_connection(wss_url, enable_multithread=True)
             msg = {
                 "jsonrpc": "2.0",
                 "id": 1,
@@ -245,6 +246,7 @@ class Deribit:
             list_monitor_log.append('Auth OK\n############')
             list_monitor_log.append('identified')
             return self._sender(msg)
+
         except Exception as er:
             from lists import list_monitor_log
             list_monitor_log.append('***** auth ERROR:' + ' error: ' + str(er) + ' *****')
@@ -304,24 +306,42 @@ class Deribit:
             else:
                 return float(delay_delay)
 
+    @staticmethod
+    def counter_send_order_function():
+        global counter_send_order_for_function
+
+        counter_send_order_for_function = counter_send_order_for_function + 1
+        return counter_send_order_for_function
+
     def _sender(self, msg):
-        from lists import list_monitor_log
+        global delay
+        from connection_hedge import led_color
+
+        counter_send_order = self.counter_send_order_function()
+        msg_id_before_counter = msg['id']
+        msg['id'] = int(str(msg['id']) + str(counter_send_order))
 
         try:
             if str(msg['method']) == 'public/set_heartbeat':
                 self.logwriter(str(msg['method']) + '(* Connection Test *)' + ' ID: ' + str(msg['id']))
 
             elif str(msg['method']) == "private/buy" or str(msg['method']) == "private/sell":
-                instrument_name = str(msg['params']['instrument_name'])
-                instrument_direction = str(msg['method']) + ' ' + str(msg['params']['type'])
-                order_amount_instrument = str(msg['params']['amount'])
-                self.logwriter(str(instrument_name) +
-                               ': ' + str(instrument_direction) +
-                               ' ' + str(order_amount_instrument) +
-                               ' ID: ' + str(msg['id']))
+                if str(msg_id_before_counter) == "8" or str(msg_id_before_counter) == "9":
+                    instrument_name = str(msg['params']['instrument_name'])
+                    instrument_direction = str(msg['method']) + ' ' + str(msg['params']['type'])
+                    order_amount_instrument = str(msg['params']['amount'])
+                    instrument_price = str(msg['params']['price'])
+                    self.logwriter(str(instrument_name) +
+                                   ': ' + str(instrument_direction) +
+                                   ' ' + str(order_amount_instrument) +
+                                   ' at ' + str(instrument_price) +
+                                   ' ID: ' + str(msg['id']) +
+                                   '_' + str(counter_send_order))
+                else:
+                    pass
 
             else:
-                self.logwriter(str(msg['method']) + ' ID: ' + str(msg['id']))
+                self.logwriter(str(msg['method']) + ' ID: ' + str(msg['id']) + '_' + str(counter_send_order))
 
             self._WSS.send(json.dumps(msg))
             out = json.loads(self._WSS.recv())
@@ -329,33 +349,56 @@ class Deribit:
             delay = self._delay(sender_rate_rate_=self.sender_rate(
                 counter_send_order_for_sender_rate=counter_send_order, time_now=time.time()))
 
-            if delay > 0:
+            if delay > 0 and (msg_id_before_counter != 8 and msg_id_before_counter != 9 and
+                              msg_id_before_counter != 14):
                 time.sleep(delay)
             else:
                 pass
 
-            if 'error' in str(out):
-                self.logwriter(str(out) + ' ID: ' + str(msg['id']))
-                list_monitor_log.append(str(out) + ' ID: ' + str(msg['id']))
-                return out['error']
-
-            elif str(msg['method']) == 'public/set_heartbeat':
-                if 'too_many_requests' in str(out) or '10028' in str(out) or 'too_many_requests' in str(
-                        out['result']) or '10028' in str(out['result']):
-                    list_monitor_log.append(str('***************** ERROR too_many_requests ******************' + str(
-                        out) + str(msg['id'])))
-                    self.logwriter(str('**************** ERROR too_many_requests *****************' + str(
-                        out) + str(msg['id'])))
+            if 'error' in str(out) or \
+                    (msg['id'] != out['id'] and msg_id_before_counter != 1 and led_color() == 'green' and
+                     msg_id_before_counter != 8 and msg_id_before_counter != 9):
+                if msg['id'] != out['id']:
+                    self.logwriter(' ***** ERROR: msgSentID != msgOutID *****\n***** msgSent: ' + str(msg) +
+                                   ' *****\n***** msgOut: ' + str(out) + ' *****\n*** msgSent ID: ' + str(msg['id']) +
+                                   '_' + str(counter_send_order) + ' ***''\n*** msgOut ID: ' + str(out['id']) + ' ***')
                     time.sleep(10)
-                    return 'too_many_requests'
+                    out = {'error': {'code': 'error'}}
                 else:
-                    return out['result']
+                    self.logwriter(' ***** _sender ERROR: msgOut: ' + str(out) + '*****\n ***msgSent ID: ' +
+                                   str(msg['id']) + '_' + str(counter_send_order) + ' ***')
+
+                if str(out['error']['code']) == '13009' or str(out['error']['code']) == '13004':
+                    self.logwriter('***** _sender msg - VERIFY CREDENTIALS - Type your Deribit API and Secret Keys '
+                                   '*****')
+                    if str(msg_id_before_counter) == '19':
+                        return float(0)
+                    elif str(msg_id_before_counter) == '25':
+                        return 0
+                    else:
+                        return out['error']
+
+                elif str(msg_id_before_counter) == '19':
+                    return float(0)
+
+                elif str(msg_id_before_counter) == '25':
+                    return 0
+
+                else:
+                    return out['error']
             else:
                 return out['result']
 
         except Exception as er:
-            self.logwriter('_sender error: ' + str(er) + ' ID: ' + str(msg['id']))
-            list_monitor_log.append('_sender error: ' + str(er) + ' ID: ' + str(msg['id']))
+            from connection_hedge import connection_thread, run_thread
+            import threading
+
+            self.logwriter('***** _sender ERROR: ' + str(er) + ' msgSent ID: ' + str(msg['id']) +
+                           '_' + str(counter_send_order) + ' *****')
+            if run_thread.is_alive() is True:
+                pass
+            else:
+                connection_thread()
         finally:
             pass
 
@@ -584,6 +627,63 @@ class Deribit:
                 }
             }
         return self._sender(msg)
+
+    def hello(self):
+        msg = \
+            {
+                "jsonrpc": "2.0",
+                "id": 26,
+                "method": "public/hello",
+                "params": {
+                    "client_name": "VavaBot - Options Strategy",
+                    "client_version": "7.5.1"
+                }
+            }
+        return self._sender(msg)
+
+    def test(self):
+        global delay
+
+        counter_send_order1 = self.counter_send_order_function()
+
+        if delay > 0:
+            time.sleep(delay)
+        else:
+            pass
+
+        msg1 = \
+            {
+                "jsonrpc": "2.0",
+                "id": 4,
+                "method": "public/test",
+                "params": {
+                }
+            }
+
+        try:
+            self._WSS.send(json.dumps(msg1))
+            out1 = json.loads(self._WSS.recv())
+        except AttributeError as er1:
+            self.logwriter(
+                str('********** Connection Test Error: ' + str(er1) + ' **********\n msgSent ID: ' +
+                    str(msg1['id']) + '_' + str(counter_send_order1)))
+            return 'error'
+
+        self.logwriter(
+            str(msg1['method']) + '(* Connection Test *)' + ' ID: ' + str(msg1['id']) + '_' + str(
+                counter_send_order1))
+
+        if 'error' in str(out1):
+            self.logwriter('**************** Connection Test ERROR *****************\n*** msgOUT: ' + str(out1) +
+                           '*** \n*** msgOut ID: ' + str(out1['id']) + '_' + str(counter_send_order1) + ' ***')
+            return 'error'
+        else:
+            if out1['id'] == 4:
+                return out1['result']
+            elif (isinstance(out1['id'], int) or isinstance(out1['id'], float)) and out1['id'] != 4:
+                return 'version'
+            else:
+                return out1['result']
 
 
 class ConfigAndInstrumentsSaved:
@@ -1053,7 +1153,7 @@ def credentials(ui):
         pass
 
     def message_box_password_input():
-        from connection_hedge import connection1, connection_thread
+        from connection_hedge import connection1
         import os
         from lists import password_dict
         global password_dict
@@ -1072,7 +1172,6 @@ def credentials(ui):
 
         if '<Type your Deribit Key>' in str(a_s_saved) or '<Type your Deribit Secret Key>' in str(sks):
             connection1()
-            connection_thread()
             api_key_saved_print()
             secret_key_saved_print()
             testnet_true_or_false_saved_print()
@@ -1092,7 +1191,6 @@ def credentials(ui):
                     password_input = str(password_dict['pwd'])
                     message_connection_only_public()
                     connection1()
-                    connection_thread()
                     api_key_saved_print()
                     secret_key_saved_print()
                     testnet_true_or_false_saved_print()
@@ -1138,7 +1236,6 @@ def credentials(ui):
                             else:
                                 password_input = str(password_dict['pwd'])
                                 connection1()
-                                connection_thread()
                                 api_key_saved_print()
                                 secret_key_saved_print()
                                 testnet_true_or_false_saved_print()
@@ -1193,9 +1290,9 @@ def config(ui):
         ui.lineEdit_orders_rate.setText(str(send_orders_rate_file_read))
         connect.logwriter('*** Order/Second Setup: ' + str(send_orders_rate_file_read) + ' ***')
 
-    def set_version_and_icon():
+    def set_version_and_icon_signal_receive():
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "VavaBot - Delta Hedge 3.0"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "VavaBot - Delta Hedge 3.1"))
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(".../icon_noctuline_wall_e_eve.ico"),
@@ -1402,7 +1499,8 @@ def config(ui):
             list_monitor_log.append(str(er))
             config_save_file.close()
 
-    set_version_and_icon()
+    sinal.set_version_and_icon_signal.connect(set_version_and_icon_signal_receive)
+    sinal.set_version_and_icon_signal.emit()
     set_date()
     sinal.textedit_instruments_saved_signal.connect(textedit_instruments_saved_signal)
     sinal.ui_signal3.connect(ui_signal3)
@@ -2046,14 +2144,25 @@ def run_hedge(ui):
             sinal.ui_signal1.emit({
                 'object_signal': 'Hedge_Started_icon', 'info': ''})
 
+            counter_while_hedge_on = 11
+            currency = str(instrument_currency_saved())
+
             while hedge_on_off == 'on':
                 try:
                     from connection_hedge import connect
 
-                    btc_index_print_while_hedge()  # Já tem signal na função
+                    counter_while_hedge_on = counter_while_hedge_on - 1
+                    sinal.ui_signal1.emit({
+                        'object_signal': 'lineEdit_58', 'info': str(counter_while_hedge_on)})
 
-                    greeks_value = greeks_value_dict
-                    hedge_greeks_value = float(greeks_value[hedge_type])
+                    if counter_while_hedge_on <= 0:
+                        counter_while_hedge_on = 11
+                        btc_index_print_while_hedge()  # Já tem signal na função
+                        greeks_value = greeks_value_dict
+                        hedge_greeks_value = float(greeks_value[hedge_type])
+                    else:
+                        summary_total = connect.get_account_summary(currency=currency)
+                        hedge_greeks_value = round(float(summary_total[hedge_type]), 4)
 
                     if float(hedge_superior_limit) >= float(hedge_greeks_value) >= float(hedge_inferior_limit):
                         list_monitor_log.append('*** Values according to defined parameters ***')
